@@ -36,6 +36,12 @@ class BaseConfig:
     # cause control circuit made some limit, if the voltage is below 7 volts, it may lake of electricity
     # probably low on energy
     read_power_left = '#001PRTV!'
+    
+    init_set_power_on_release = '#000PCSM!#001PCSM!#002PCSM!#003PCSM!#004PCSM!#005PCSM!'
+    init_set_steering_mode = '#000PMOD1!#001PMOD3!'
+    
+    cam_mode_single_cam_id = 1
+    cam_mode_stereo_cam_id = (1, 2)
 
 
 base_script = BaseConfig()
