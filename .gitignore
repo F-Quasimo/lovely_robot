@@ -1,0 +1,5 @@
+# ignore files that couldnt be add to git
+
+tools/camera_capture.py
+
+*.pyc
