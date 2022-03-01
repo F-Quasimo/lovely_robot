@@ -7,6 +7,7 @@ import platform
 
 
 def DoNothing(**kwargs):
+    print('DO NOTHING', [d[0] for d in kwargs.items()])
     return []
 
 
