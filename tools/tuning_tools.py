@@ -14,7 +14,8 @@ import threading
 import inspect
 import time
 import ctypes
-from config_subscripts import base_script
+from config_subscripts import base_script, base_config
+from config_fasci import fasci_config
 from camera_mode import SingleCam, StereoCam
 
 
@@ -186,10 +187,16 @@ class TuningGUI:
         # click for grap video stream right click for snap
         self.cap_curr_snap = False
         self.cap_tar_snap = False
-        self.cap_curr_bt_right_click = False
-        self.cap_tar_bt_right_click = False
+        self.cap_curr_snapped = False
+        self.cap_tar_snapped = False
         self.cam_mode_single_cam_id = base_script.cam_mode_single_cam_id
         self.cam_mode_stereo_cam_id = base_script.cam_mode_stereo_cam_id
+
+        fs_read_calib = cv2.FileStorage(base_config.calib_path, cv2.FileStorage_READ)
+        self.camera_matrix = fs_read_calib.getNode('camera_matrix').mat()
+        self.optimal_matrix = fs_read_calib.getNode('optimal_matrix').mat()
+        self.distortion = fs_read_calib.getNode('distortion').mat()
+        fs_read_calib.release()
 
         # ********************** EULER_SHOW *********************
         font_height = 2
@@ -508,12 +515,14 @@ class TuningGUI:
 
     def _cap_curr_button_func(self, x):
         self.cap_curr_snap = False
+        self.cap_curr_snapped = False
 
     def _cap_curr_button_right_func(self, x):
         self.cap_curr_snap = True
 
     def _cap_tar_button_func(self, x):
         self.cap_tar_snap = False
+        self.cap_tar_snapped = False
         if self._is_all_cam_mode_no_thread():
             self._create_thread()
 
@@ -561,18 +570,29 @@ class TuningGUI:
         if sigle_cam.OpenCam():
             while True:
                 snap = sigle_cam.SnapShoot()
+                snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
                 img_tk, snap = self._get_tk_img(snap)
                 if not self.cap_tar_snap:
                     self.monitor_tar.configure(image=img_tk)
                     self.monitor_tar.image = img_tk
+                elif self.cap_tar_snap and not self.cap_tar_snapped:
+                    self.monitor_tar.configure(image=img_tk)
+                    self.monitor_tar.image = img_tk
                     self.np_tar = snap.copy()
+                    self.cap_tar_snapped = True
                 if not self.cap_curr_snap:
                     self.monitor_curr.configure(image=img_tk)
                     self.monitor_curr.image = img_tk
+                elif self.cap_curr_snap and not self.cap_curr_snapped:
+                    self.monitor_curr.configure(image=img_tk)
+                    self.monitor_curr.image = img_tk
                     self.np_curr = snap.copy()
+                    self.cap_curr_snapped = True
+                    dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr, 'cam_matrix': self.camera_matrix}
+                    fasci_config.SingleCamOnCall(**dic)
                 self.monitor_show.configure(image=img_tk)
                 self.monitor_show.image = img_tk
-                print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
+                # print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
         return
 
     def _thread_stereo(self):

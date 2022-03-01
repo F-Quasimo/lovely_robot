@@ -5,7 +5,7 @@ import numpy as np
 import platform
 
 
-class BaseConfig:
+class BaseScript:
     steering_engine_mode = ['#000PMOD!', '#001PMOD!', '#002PMOD!', '#003PMOD!', '#004PMOD!', '#005PMOD!']
     steering_release_mode = ['#000PULK!', '#001PULK!', '#002PULK!', '#003PULK!', '#004PULK!', '#005PULK!']
     steering_regain_mode = ['#000PULR!', '#001PULR!', '#002PULR!', '#003PULR!', '#004PULR!', '#005PULR!']
@@ -36,12 +36,17 @@ class BaseConfig:
     # cause control circuit made some limit, if the voltage is below 7 volts, it may lake of electricity
     # probably low on energy
     read_power_left = '#001PRTV!'
-    
+
     init_set_power_on_release = '#000PCSM!#001PCSM!#002PCSM!#003PCSM!#004PCSM!#005PCSM!'
     init_set_steering_mode = '#000PMOD1!#001PMOD3!'
-    
-    cam_mode_single_cam_id = 1
+
+    cam_mode_single_cam_id = 0
     cam_mode_stereo_cam_id = (1, 2)
 
 
-base_script = BaseConfig()
+class BaseConfig:
+    calib_path = './calib_saved/calib.xml'
+
+
+base_script = BaseScript()
+base_config = BaseConfig()
