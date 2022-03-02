@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from cmath import pi
 from ctypes import alignment
 import os
@@ -17,17 +18,20 @@ import ctypes
 from config_subscripts import base_script, base_config
 from config_fasci import fasci_config
 from camera_mode import SingleCam, StereoCam
+from motion_act import RobotArm
 
 
 class SerialRobot:
-    def __init__(self,
-                 com_port='COM0',
-                 baud_rate=115200,
-                 parity_check=serial.PARITY_NONE,
-                 stop_bits=1,
-                 byte_size=serial.EIGHTBITS,
-                 timeout=0.2,
-                 receiver_callback=None):
+    def __init__(
+        self,
+        com_port='COM0',
+        baud_rate=115200,
+        parity_check=serial.PARITY_NONE,
+        stop_bits=1,
+        byte_size=serial.EIGHTBITS,
+        timeout=0.2,
+        receiver_callbacks=[],
+    ):
         self.port = com_port
         self.baud_rate = baud_rate
         self.parity_check = parity_check
@@ -37,7 +41,11 @@ class SerialRobot:
         self.receiver_thread = None
         self.receiver_buffer = ''
         self.my_serial = None
-        self.receiver_callback = receiver_callback
+        self.receiver_callbacks = receiver_callbacks
+
+    def SetReceiverCallBack(self, call_backs):
+        self.receiver_callbacks = call_backs
+        return
 
     def IsOpen(self):
         if self.my_serial == None:
@@ -50,7 +58,9 @@ class SerialRobot:
             read = self.my_serial.readall()
             if len(read) > 0:
                 self.receiver_buffer = str(bytes(read).decode('utf-8', "ignore"))
-                self.receiver_callback(self.receiver_buffer)
+                for func in self.receiver_callbacks:
+                    func(self.receiver_buffer)
+                print(self.receiver_buffer, ' ', self.receiver_callbacks)
 
     def Open(self):
         self.my_serial = serial.Serial(port=self.port,
@@ -61,7 +71,7 @@ class SerialRobot:
                                        bytesize=self.byte_size)
         self.receiver_thread = threading.Thread(target=self._thread_receive)
         self.receiver_thread.start()
-        self.receiver_callback('Open OK')
+        # self.receiver_callback('Open OK')
 
     def Send(self, buffer):
         status_ = self.my_serial.isOpen()
@@ -95,12 +105,36 @@ class TuningGUI:
         self.window = tk.Tk()
         self.window.title(tk_tittle)
         self.frame_main = self.window
-        # self.frame_1 = tk.Frame(master=self.frame_main, bg='#555555555', borderwidth=10)
-        # self.frame_2 = tk.Frame(master=self.frame_main, bg='#555555555', borderwidth=10)
-        # self.frame_3 = tk.Frame(master=self.frame_main, bg='#555555555', borderwidth=10)
-        # self.frame_4 = tk.Frame(master=self.frame_main, bg='#555555555', borderwidth=10)
-        # self.frame_5 = tk.Frame(master=self.frame_main, bg='#555555555', borderwidth=10)
 
+        # *************************** app run var *********************
+        self.my_serial = None
+        self.command_send_buffer = ''
+        # single camera \ stereo_camera \ single_track \ stereo_left_track \ stereo_3d_track
+        self.cam_mode = ['SingleCam', 'Stereo', '1_Track', '1_L_Track', '3DTrack']
+        self.cam_mode_flag = 0
+        self.cam_mode_thread = [None] * len(self.cam_mode)
+        
+        # click for grap video stream right click for snap
+        self.cap_curr_snap = False
+        self.cap_tar_snap = False
+        self.cap_curr_snapped = False
+        self.cap_tar_snapped = False
+        self.cam_mode_single_cam_id = base_script.cam_mode_single_cam_id
+        self.cam_mode_stereo_cam_id = base_script.cam_mode_stereo_cam_id
+        self.cam_mode_stereo_cam_size = base_script.cam_mode_stereo_cam_size
+        self.cam_open_mode = base_script.cam_open_mode
+
+        # **** Read Calib single camera
+        fs_read_calib = cv2.FileStorage(base_config.calib_path, cv2.FileStorage_READ)
+        self.camera_matrix = fs_read_calib.getNode('camera_matrix').mat()
+        self.optimal_matrix = fs_read_calib.getNode('optimal_matrix').mat()
+        self.distortion = fs_read_calib.getNode('distortion').mat()
+        fs_read_calib.release()
+
+        # define robot arm
+        self.robot_arm = RobotArm()
+
+        # **************************************************************
         self.monitor = tk.PanedWindow(self.frame_main, orient=tk.VERTICAL)
         self.euler_show = tk.PanedWindow(self.frame_main, orient=tk.VERTICAL)
 
@@ -177,26 +211,6 @@ class TuningGUI:
                                      height=self.pic_height,
                                      width=self.pic_width)
         self.monitor_show.pack(side=tk.LEFT)
-        # *************************** app run var *********************
-        self.my_serial = None
-        self.command_send_buffer = ''
-        # single camera \ stereo_camera \ single_track \ stereo_left_track \ stereo_3d_track
-        self.cam_mode = ['SingleCam', 'Stereo', '1_Track', '1_L_Track', '3DTrack']
-        self.cam_mode_flag = 0
-        self.cam_mode_thread = [None] * len(self.cam_mode)
-        # click for grap video stream right click for snap
-        self.cap_curr_snap = False
-        self.cap_tar_snap = False
-        self.cap_curr_snapped = False
-        self.cap_tar_snapped = False
-        self.cam_mode_single_cam_id = base_script.cam_mode_single_cam_id
-        self.cam_mode_stereo_cam_id = base_script.cam_mode_stereo_cam_id
-
-        fs_read_calib = cv2.FileStorage(base_config.calib_path, cv2.FileStorage_READ)
-        self.camera_matrix = fs_read_calib.getNode('camera_matrix').mat()
-        self.optimal_matrix = fs_read_calib.getNode('optimal_matrix').mat()
-        self.distortion = fs_read_calib.getNode('distortion').mat()
-        fs_read_calib.release()
 
         # ********************** EULER_SHOW *********************
         font_height = 2
@@ -204,8 +218,8 @@ class TuningGUI:
         euler_show_padx = 4
         self.pitch = tk.Label(self.frame_2, text='Pitch_x', height=font_height, width=font_width, bg='#000fff000')
         self.pitch.grid(row=0, column=0, sticky=tk.NSEW, padx=euler_show_padx, pady=1, ipadx=1, ipady=1)
-        self.yal = tk.Label(self.frame_2, text='Yal_y', height=font_height, width=font_width, bg='#000fff000')
-        self.yal.grid(row=0, column=1, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
+        self.yaw = tk.Label(self.frame_2, text='Yaw_y', height=font_height, width=font_width, bg='#000fff000')
+        self.yaw.grid(row=0, column=1, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
         self.roll = tk.Label(self.frame_2, text='Roll_z', height=font_height, width=font_width, bg='#000fff000')
         self.roll.grid(row=0, column=2, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
         self.shift_x = tk.Label(self.frame_2, text='Shift_x', height=font_height, width=font_width, bg='#000fff000')
@@ -218,8 +232,8 @@ class TuningGUI:
         font_height_val = 2
         self.pitch_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
         self.pitch_val.grid(row=1, column=0, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.yal_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
-        self.yal_val.grid(row=1, column=1, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
+        self.yaw_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
+        self.yaw_val.grid(row=1, column=1, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
         self.roll_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
         self.roll_val.grid(row=1, column=2, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
         self.shift_x_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
@@ -245,16 +259,20 @@ class TuningGUI:
         button_w = 9
         button_padx = 7
         button_pady = 7
+        delta_control = 4
         self.pitch_p_bt = tk.Button(self.frame_3, text='Pitch+^', font=button_font, width=button_w)
-        self.pitch_p_bt.bind('<Button-1>', self._buttun_none)
+        self.pitch_p_bt.bind('<Button-1>',
+                             lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_control, time_t=2000)))
         self.pitch_p_bt.grid(row=0, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.yal_p_bt = tk.Button(self.frame_3, text='Yal+>', font=button_font, width=button_w)
-        self.yal_p_bt.bind('<Button-1>', self._buttun_none)
-        self.yal_p_bt.grid(row=0, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.yaw_p_bt = tk.Button(self.frame_3, text='Yaw+>', font=button_font, width=button_w)
+        self.yaw_p_bt.bind('<Button-1>',
+                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=delta_control, time_t=2000)))
+        self.yaw_p_bt.grid(row=0, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.roll_p_bt = tk.Button(self.frame_3, text='Roll+@', font=button_font, width=button_w)
-        self.roll_p_bt.bind('<Button-1>', self._buttun_none)
+        self.roll_p_bt.bind('<Button-1>',
+                            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=delta_control, time_t=2000)))
         self.roll_p_bt.grid(row=0, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_lf_bt = tk.Button(self.frame_3, text='LF', font=button_font, width=button_w)
@@ -275,15 +293,16 @@ class TuningGUI:
         self.cap_tar_bt.grid(row=0, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.pitch_m_bt = tk.Button(self.frame_3, text='Pitch-v', font=button_font, width=button_w)
-        self.pitch_m_bt.bind('<Button-1>', self._buttun_none)
+        self.pitch_m_bt.bind('<Button-1>',
+                             lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1*delta_control, time_t=2000)))
         self.pitch_m_bt.grid(row=1, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.yal_m_bt = tk.Button(self.frame_3, text='Yal-v', font=button_font, width=button_w)
-        self.yal_m_bt.bind('<Button-1>', self._buttun_none)
-        self.yal_m_bt.grid(row=1, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.yaw_m_bt = tk.Button(self.frame_3, text='Yaw-<', font=button_font, width=button_w)
+        self.yaw_m_bt.bind('<Button-1>',lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1*delta_control, time_t=2000)))
+        self.yaw_m_bt.grid(row=1, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.roll_m_bt = tk.Button(self.frame_3, text='Roll-G', font=button_font, width=button_w)
-        self.roll_m_bt.bind('<Button-1>', self._buttun_none)
+        self.roll_m_bt.bind('<Button-1>', lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1*delta_control, time_t=2000)))
         self.roll_m_bt.grid(row=1, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_left_bt = tk.Button(self.frame_3, text='Left <', font=button_font, width=button_w)
@@ -304,7 +323,7 @@ class TuningGUI:
         self.cap_curr_bt.grid(row=1, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.stand_up_bt = tk.Button(self.frame_3, text='StandUp~', font=button_font, width=button_w)
-        self.stand_up_bt.bind('<Button-1>', self._buttun_none)
+        self.stand_up_bt.bind('<Button-1>',lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_control, time_t=2000)))
         self.stand_up_bt.grid(row=2, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.release_machine_bt = tk.Button(self.frame_3, text='Release', font=button_font, width=button_w)
@@ -332,7 +351,7 @@ class TuningGUI:
         self.cam_mode_bt.grid(row=2, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.sit_down_bt = tk.Button(self.frame_3, text='SitDown~', font=button_font, width=button_w)
-        self.sit_down_bt.bind('<Button-1>', self._buttun_none)
+        self.sit_down_bt.bind('<Button-1>', lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1*delta_control, time_t=2000)))
         self.sit_down_bt.grid(row=3, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.load_json_bt = tk.Button(self.frame_3, text='LoadJson', font=button_font, width=button_w)
@@ -491,8 +510,9 @@ class TuningGUI:
                                      stop_bits=self.var_stop_bit,
                                      byte_size=self.var_bit_wide,
                                      timeout=0.3,
-                                     receiver_callback=self._receiver_callback)
+                                     receiver_callbacks=[self._receiver_callback])
         self.my_serial.Open()
+        self._robot_init()
 
     def _send_command(self, command=None):
         if self.my_serial.IsOpen():
@@ -503,6 +523,7 @@ class TuningGUI:
                 else:
                     print('NO COMMAND IN INPUT ENTRY')
             else:
+                print('DEBUG SEND COMMAND: ', command)
                 if isinstance(command, list):
                     for cmd in command:
                         self.my_serial.Send(buffer=cmd)
@@ -532,7 +553,7 @@ class TuningGUI:
     def _cam_mode_button_func(self, x):
         self.cam_mode_flag = (self.cam_mode_flag + 1) % len(self.cam_mode)
         self.cam_mode_bt['text'] = self.cam_mode[self.cam_mode_flag]
-        self._destory_thread()
+        # self._destory_thread()
         self._create_thread()
 
     def _is_all_cam_mode_no_thread(self):
@@ -542,6 +563,7 @@ class TuningGUI:
         return True
 
     def _create_thread(self):
+        
         if self.cam_mode_flag == 0:
             self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_single)
             self.cam_mode_thread[self.cam_mode_flag].start()
@@ -570,6 +592,8 @@ class TuningGUI:
         if sigle_cam.OpenCam():
             while True:
                 snap = sigle_cam.SnapShoot()
+                if snap is None:
+                    break
                 snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
                 img_tk, snap = self._get_tk_img(snap)
                 if not self.cap_tar_snap:
@@ -593,30 +617,80 @@ class TuningGUI:
                 self.monitor_show.configure(image=img_tk)
                 self.monitor_show.image = img_tk
                 # print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
-        return
+        sigle_cam.Close()
+        
+        return None
 
     def _thread_stereo(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
-        while True:
-            print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
-        return
+        stereo_cam = StereoCam(cam_id0=self.cam_mode_stereo_cam_id[0],
+                               cam_id1=self.cam_mode_stereo_cam_id[1],
+                               cam_size=self.cam_mode_stereo_cam_size,
+                               cam_mode=self.cam_open_mode)
+        if stereo_cam.OpenCam():
+            while True:
+                snap0, snap1 = stereo_cam.SnapShoot()
+                if snap0 is None or snap1 is None:
+                    break
+                snap0 = cv2.resize(snap0, (512, 288))
+                snap1 = cv2.resize(snap1, (512, 288))
+                # snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
+                img_tk0, snap0 = self._get_tk_img(snap0)
+                self.monitor_tar.configure(image=img_tk0)
+                self.monitor_tar.image = img_tk0
+
+                # snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
+                img_tk1, snap1 = self._get_tk_img(snap1)
+                self.monitor_curr.configure(image=img_tk1)
+                self.monitor_curr.image = img_tk1
+        stereo_cam.Close()
+        
+        return None
 
     def _thread_1_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
-        while True:
-            print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
+        sigle_cam = SingleCam(cam_id=self.cam_mode_single_cam_id)
+        if sigle_cam.OpenCam():
+            while True:
+                snap = sigle_cam.SnapShoot()
+                if snap is None:
+                    break
+                snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
+                img_tk, snap = self._get_tk_img(snap)
+                if not self.cap_tar_snap:
+                    self.monitor_tar.configure(image=img_tk)
+                    self.monitor_tar.image = img_tk
+                elif self.cap_tar_snap and not self.cap_tar_snapped:
+                    self.monitor_tar.configure(image=img_tk)
+                    self.monitor_tar.image = img_tk
+                    self.np_tar = snap.copy()
+                    self.cap_tar_snapped = True
+                else:
+                    self.monitor_curr.configure(image=img_tk)
+                    self.monitor_curr.image = img_tk
+                    self.np_curr = snap.copy()
+                    self.cap_curr_snapped = True
+                    dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr, 'cam_matrix': self.camera_matrix}
+                    fasci_config.SingleCamOnCall(**dic)
+                self.monitor_show.configure(image=img_tk)
+                self.monitor_show.image = img_tk
+                time.sleep(2)
+        sigle_cam.Close()
+        
         return
 
     def _thread_1_l_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
         while True:
             print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
+        
         return
 
     def _thread_3d_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
         while True:
             print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
+        
         return
 
     def _destory_thread(self):
@@ -656,7 +730,17 @@ class TuningGUI:
         return
 
     def _receiver_callback(self, buffer_in):
+        print('DEBUG RECEIVER_CALL_BACK: ', time.time())
         self.receiver.insert('end', buffer_in)
+
+    def _robot_init(self):
+        serial_callback = [self.robot_arm.UpdateSteerPositionBySerialReturn]
+        self.my_serial.SetReceiverCallBack(serial_callback)
+        time.sleep(1)
+        self._send_command(base_script.steering_read_pos)
+        time.sleep(1)
+        self.robot_arm.UpdateSteerPositionBySerialReturn(self.my_serial.receiver_buffer)
+        self.my_serial.SetReceiverCallBack([self._receiver_callback])
 
     def Run(self):
         self.window.mainloop()

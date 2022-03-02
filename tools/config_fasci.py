@@ -25,6 +25,13 @@ class FascinatingConfig:
             return SingleCamFascinate
         else:
             return DoNothing
+    
+    @property
+    def ConditionedReflex(self):
+        if os.path.exists(fasci_file):
+            return Euler2Motion
+        else:
+            return DoNothing
 
 
 fasci_config = FascinatingConfig()

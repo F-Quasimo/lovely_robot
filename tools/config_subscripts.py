@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 import platform
+import cv2
 
 
 class BaseScript:
@@ -38,10 +39,12 @@ class BaseScript:
     read_power_left = '#001PRTV!'
 
     init_set_power_on_release = '#000PCSM!#001PCSM!#002PCSM!#003PCSM!#004PCSM!#005PCSM!'
-    init_set_steering_mode = '#000PMOD1!#001PMOD3!'
+    init_set_steering_mode = '#000PMOD1!#001PMOD3!#002PMOD1!#003PMOD1!#004PMOD1!#005PMOD3!'
 
-    cam_mode_single_cam_id = 0
-    cam_mode_stereo_cam_id = (1, 2)
+    cam_mode_single_cam_id = 1
+    cam_mode_stereo_cam_id = (2, 1)
+    cam_mode_stereo_cam_size = (1920,1080)
+    cam_open_mode = cv2.CAP_ANY
 
 
 class BaseConfig:

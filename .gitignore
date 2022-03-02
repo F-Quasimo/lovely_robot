@@ -1,5 +1,5 @@
 # ignore files that couldnt be add to git
-
+*/__pycache__/*
 tools/camera_capture.py
 *fascinating*
 *.pyc
