@@ -563,7 +563,7 @@ class TuningGUI:
         return True
 
     def _create_thread(self):
-        
+        self._destory_thread()
         if self.cam_mode_flag == 0:
             self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_single)
             self.cam_mode_thread[self.cam_mode_flag].start()
