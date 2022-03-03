@@ -10,9 +10,9 @@ in this respo, you will get to know how to build a robot with raspberry pi. It m
 ### how to calibrate camera?
 I write a calib tool in '/tools' but it is ugly and imcomplete. anyway, it works for single camera calib. I finish this tool at the dead of night with dizzy and sleepy. forgive me.
 It looks like this:
-the first two input is used to config the camera info, then click the button, change the capture picture save to "which folder" and click opencamera will open the camera u select in row 1. shows:
-![basic_gui](./pic_img/camera_calib0.png)
-![open_camera](./pic_img/camera_calib1.png)
+tuning tools is worked on your PC and your PC have to connect the robot with use serial tranformer instead raspberry. so, with serial command send from PC, you can easily know what happen with a command sended.(at the right bottom, you have to config your serial port first and click "open_serial" button) also, my tuning tools is used to calib a camera or stereo cameras. if you only want to calib your camera. it is also supported. with camera connected to your PC, you can click 'CalibSnap' to make some configure before open your camera.such as which camera \ camera image size \ chessboard inner number \ physics distance \ save calib.xml to where~~~, this configure things will input in Text lable above, and click "CalibSnap" make your input go to effect. when you configure "/path png_name calib.xml" over. then the camera stream will shown in monitor and then you click "CalibSnap", a picture will saved to the path you just configured. when you take enough chessboard picture. click "Calib" button to finish your calibration. good luck, go and find something more. 
+shows:
+![basic_gui](./pic_img/tuning_tools.png)
 
 ### how to use Serial tuning tools?
 tuning_tools was put at tools/tuning_tools.py
