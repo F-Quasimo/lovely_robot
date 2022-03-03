@@ -19,7 +19,7 @@ class BaseScript:
         '#005PRAD!',
     ]
     steering_straighten = '#000P1500T3000!#001P1500T3000!#002P1500T3000!#003P1500T3000!#004P1500T3000!#005P1500T3000!'
-    steering_half_straighten = '#001P1904T3000!#002P2301T3000!#003P1169T3000!#004P1467T3000!#005P1497!T3000!'
+    steering_half_straighten = '#000P1496T3000!#001P2294T3000!#002P2255T3000!#003P1936T3000!#004P1477T3000!'
     # for |    3.7V    |  7.4V
     #     | 100 | 4.2  |  8.4
     #     |  90 | 4.08 |  8.16
@@ -48,7 +48,7 @@ class BaseScript:
 
 
 class BaseConfig:
-    calib_path = './calib_saved/calib.xml'
+    calib_path = './calib_stereo_main/calib_main.xml'
 
 
 base_script = BaseScript()

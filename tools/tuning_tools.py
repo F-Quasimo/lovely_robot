@@ -19,6 +19,7 @@ from config_subscripts import base_script, base_config
 from config_fasci import fasci_config
 from camera_mode import SingleCam, StereoCam
 from motion_act import RobotArm
+from camera_calib import LovelyCalibTool
 
 
 class SerialRobot:
@@ -284,20 +285,28 @@ class TuningGUI:
         button_w = 9
         button_padx = 7
         button_pady = 7
-        delta_control = 4
+        delta_move = 4
+        delta_mini_move = 0.5
         self.pitch_p_bt = tk.Button(self.frame_3, text='Pitch+^', font=button_font, width=button_w)
+        self.pitch_p_bt.bind('<Button-1>',
+                             lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_move, time_t=2000)))
         self.pitch_p_bt.bind(
-            '<Button-1>', lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_control, time_t=2000)))
+            '<Button-3>',
+            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_mini_move, time_t=2000)))
         self.pitch_p_bt.grid(row=0, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.yaw_p_bt = tk.Button(self.frame_3, text='Yaw+>', font=button_font, width=button_w)
         self.yaw_p_bt.bind('<Button-1>',
-                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=delta_control, time_t=2000)))
+                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=delta_move, time_t=2000)))
+        self.yaw_p_bt.bind('<Button-3>',
+                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=delta_mini_move, time_t=2000)))
         self.yaw_p_bt.grid(row=0, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.roll_p_bt = tk.Button(self.frame_3, text='Roll+@', font=button_font, width=button_w)
         self.roll_p_bt.bind('<Button-1>',
-                            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=delta_control, time_t=2000)))
+                            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=delta_move, time_t=2000)))
+        self.roll_p_bt.bind(
+            '<Button-3>', lambda event: self._send_command(self.robot_arm.RollUp(delta_x=delta_mini_move, time_t=2000)))
         self.roll_p_bt.grid(row=0, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_lf_bt = tk.Button(self.frame_3, text='LF', font=button_font, width=button_w)
@@ -320,19 +329,26 @@ class TuningGUI:
         self.pitch_m_bt = tk.Button(self.frame_3, text='Pitch-v', font=button_font, width=button_w)
         self.pitch_m_bt.bind(
             '<Button-1>',
-            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1 * delta_control, time_t=2000)))
+            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1 * delta_move, time_t=2000)))
+        self.pitch_m_bt.bind(
+            '<Button-3>',
+            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.pitch_m_bt.grid(row=1, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.yaw_m_bt = tk.Button(self.frame_3, text='Yaw-<', font=button_font, width=button_w)
+        self.yaw_m_bt.bind('<Button-1>',
+                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1 * delta_move, time_t=2000)))
         self.yaw_m_bt.bind(
-            '<Button-1>',
-            lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1 * delta_control, time_t=2000)))
+            '<Button-3>',
+            lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.yaw_m_bt.grid(row=1, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.roll_m_bt = tk.Button(self.frame_3, text='Roll-G', font=button_font, width=button_w)
         self.roll_m_bt.bind(
-            '<Button-1>',
-            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1 * delta_control, time_t=2000)))
+            '<Button-1>', lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1 * delta_move, time_t=2000)))
+        self.roll_m_bt.bind(
+            '<Button-3>',
+            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.roll_m_bt.grid(row=1, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_left_bt = tk.Button(self.frame_3, text='Left <', font=button_font, width=button_w)
@@ -354,8 +370,11 @@ class TuningGUI:
 
         # ******************* BUTTON ROW 2 *********************
         self.stand_up_bt = tk.Button(self.frame_3, text='StandUp~', font=button_font, width=button_w)
+        self.stand_up_bt.bind('<Button-1>',
+                              lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_move, time_t=2000)))
         self.stand_up_bt.bind(
-            '<Button-1>', lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_control, time_t=2000)))
+            '<Button-3>',
+            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_mini_move, time_t=2000)))
         self.stand_up_bt.grid(row=2, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.release_machine_bt = tk.Button(self.frame_3, text='Release', font=button_font, width=button_w)
@@ -386,7 +405,10 @@ class TuningGUI:
         self.sit_down_bt = tk.Button(self.frame_3, text='SitDown~', font=button_font, width=button_w)
         self.sit_down_bt.bind(
             '<Button-1>',
-            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1 * delta_control, time_t=2000)))
+            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1 * delta_move, time_t=2000)))
+        self.sit_down_bt.bind(
+            '<Button-3>',
+            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.sit_down_bt.grid(row=3, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.load_json_bt = tk.Button(self.frame_3, text='LoadJson', font=button_font, width=button_w)
@@ -438,8 +460,8 @@ class TuningGUI:
         self.hand_grap_bt.bind('<Button-1>', self._buttun_none)
         self.hand_grap_bt.grid(row=4, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.hand_release_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
-        self.hand_release_bt.bind('<Button-1>', self._buttun_none)
+        self.hand_release_bt = tk.Button(self.frame_3, text='robot_init', font=button_font, width=button_w)
+        self.hand_release_bt.bind('<Button-1>', self._robot_init)
         self.hand_release_bt.grid(row=4, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         # ******************* SERIAL ****************
@@ -736,7 +758,11 @@ class TuningGUI:
                     self.calib_cam_cap_thread = threading.Thread(target=self._thread_single_cam_calib)
                     self.calib_cam_cap_thread.start()
                     self.calib_snap_count = 0
-                    self.receiver.insert('end', '\n-----------CREAT CALIB STREAM-------')
+                if len(self.calib_camera_id) == 2:
+                    self.calib_cam_cap_thread = threading.Thread(target=self._thread_stereo_cam_calib)
+                    self.calib_cam_cap_thread.start()
+                    self.calib_snap_count = 0
+                self.receiver.insert('end', '\n-----------CREAT CALIB STREAM-------')
             else:
                 self.calib_step = 8
             return
@@ -752,7 +778,7 @@ class TuningGUI:
                 snap = single_cam.SnapShoot()
                 if snap is None:
                     break
-                snap_cp = cv2.resize(snap, (512, 384))
+                snap_cp = cv2.resize(snap.copy(), (512, 288))
                 img_tk, snap_cp = self._get_tk_img(snap_cp)
                 self.monitor_tar.configure(image=img_tk)
                 self.monitor_tar.image = img_tk
@@ -768,9 +794,53 @@ class TuningGUI:
             print('DEBUG CAMERA SNAP OVER')
         return
 
+    def _thread_stereo_cam_calib(self):
+        print('CALIB STREAM CREATE')
+        stereo_cam = StereoCam(cam_id0=self.calib_camera_id[0],
+                               cam_id1=self.calib_camera_id[1],
+                               cam_size=(self.calib_img_size[0], self.calib_img_size[1]),
+                               cam_mode=self.calib_cam_open_mode)
+        self.calib_imgs = [[], []]
+        if stereo_cam.OpenCam():
+            while self.calib_step == 7 or self.calib_step == 8:
+                snap0, snap1 = stereo_cam.SnapShoot()
+                if snap0 is None or snap1 is None:
+                    print('DEBUG snap0 or snap1 None')
+                    break
+                snap0_cp = cv2.resize(snap0.copy(), (512, 288))
+                snap1_cp = cv2.resize(snap1.copy(), (512, 288))
+                img_tk0, snap0_cp = self._get_tk_img(snap0_cp)
+                img_tk1, snap1_cp = self._get_tk_img(snap1_cp)
+                self.monitor_tar.configure(image=img_tk0)
+                self.monitor_tar.image = img_tk0
+                self.monitor_curr.configure(image=img_tk1)
+                self.monitor_curr.image = img_tk1
+                if self.calib_step == 8:
+                    cv2.imwrite(
+                        os.path.join(self.calib_save_to,
+                                     self.calib_cam_main_name + str(self.calib_snap_count).zfill(4) + '.jpg'), snap0)
+                    cv2.imwrite(
+                        os.path.join(self.calib_save_to,
+                                     self.calib_cam_aux_name + str(self.calib_snap_count).zfill(4) + '.jpg'), snap1)
+                    self.calib_imgs[0].append(snap0.copy())
+                    self.calib_imgs[1].append(snap1.copy())
+                    self.calib_snap_count = self.calib_snap_count + 1
+                    self.receiver.insert('end', '\nsnap a pic and snap total: ' + str(self.calib_snap_count))
+                    self.calib_step = 7
+            stereo_cam.Close()
+            print('DEBUG CAMERA SNAP OVER')
+        return
+
     def _cam_calib_compute(self, x):
         self.calib_step = 0
-        # ********************************* NOT READY *************************
+        if len(self.calib_camera_id) == 1:
+            calib_tool = LovelyCalibTool(imgs=self.calib_imgs,
+                                         board_size=self.calib_board_size,
+                                         pattern=self.calib_pattern,
+                                         physics_size=self.calib_physics_size,
+                                         calib_save_to=self.calib_save_to,
+                                         calib_save_name=self.calib_save_name)
+            calib_tool.Run()
 
     def _thread_single(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
@@ -781,7 +851,8 @@ class TuningGUI:
                 if snap is None:
                     break
                 snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
-                img_tk, snap = self._get_tk_img(snap)
+                snap_cp = cv2.resize(snap.copy(), (512, 288))
+                img_tk, snap_cp = self._get_tk_img(snap_cp)
                 if not self.cap_tar_snap:
                     self.monitor_tar.configure(image=img_tk)
                     self.monitor_tar.image = img_tk
@@ -842,7 +913,8 @@ class TuningGUI:
                 if snap is None:
                     break
                 snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
-                img_tk, snap = self._get_tk_img(snap)
+                snap_cp = cv2.resize(snap.copy(), (512, 288))
+                img_tk, snap_cp = self._get_tk_img(snap_cp)
                 if not self.cap_tar_snap:
                     self.monitor_tar.configure(image=img_tk)
                     self.monitor_tar.image = img_tk
@@ -919,7 +991,7 @@ class TuningGUI:
         print('DEBUG RECEIVER_CALL_BACK: ', time.time())
         self.receiver.insert('end', buffer_in)
 
-    def _robot_init(self):
+    def _robot_init(self, x=None):
         serial_callback = [self.robot_arm.UpdateSteerPositionBySerialReturn]
         self.my_serial.SetReceiverCallBack(serial_callback)
         time.sleep(1)
