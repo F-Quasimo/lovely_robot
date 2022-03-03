@@ -113,7 +113,7 @@ class TuningGUI:
         self.cam_mode = ['SingleCam', 'Stereo', '1_Track', '1_L_Track', '3DTrack']
         self.cam_mode_flag = 0
         self.cam_mode_thread = [None] * len(self.cam_mode)
-        
+
         # click for grap video stream right click for snap
         self.cap_curr_snap = False
         self.cap_tar_snap = False
@@ -133,6 +133,31 @@ class TuningGUI:
 
         # define robot arm
         self.robot_arm = RobotArm()
+
+        # ***** for calib
+        # 0 for default ,
+        self.calib_step = 0
+        # config step 1
+        self.calib_camera_id = 0
+        self.calib_camera_type = 'single'
+        # config step 2
+        self.calib_img_size = (1920, 1080)
+        self.calib_imgs = [[]]
+        # config step 3
+        self.calib_board_size = (7, 7)
+        # square config step 4
+        self.calib_pattern = 1
+        # config step 5
+        self.calib_physics_size = (16.4375, 15.875)
+        # config step 6
+        self.calib_save_to = '.'
+        self.calib_cam_main_name = 'p_main_'
+        self.calib_cam_aux_name = 'p_aux_'
+        self.calib_save_name = 'calib.xml'
+        self.calib_cam_open_mode = cv2.CAP_DSHOW
+        self.calib_cam_cap_thread = None
+        self.calib_snap_count = 0
+        # step 7 start camera stream step 8: take calib imgs
 
         # **************************************************************
         self.monitor = tk.PanedWindow(self.frame_main, orient=tk.VERTICAL)
@@ -261,8 +286,8 @@ class TuningGUI:
         button_pady = 7
         delta_control = 4
         self.pitch_p_bt = tk.Button(self.frame_3, text='Pitch+^', font=button_font, width=button_w)
-        self.pitch_p_bt.bind('<Button-1>',
-                             lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_control, time_t=2000)))
+        self.pitch_p_bt.bind(
+            '<Button-1>', lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_control, time_t=2000)))
         self.pitch_p_bt.grid(row=0, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.yaw_p_bt = tk.Button(self.frame_3, text='Yaw+>', font=button_font, width=button_w)
@@ -293,16 +318,21 @@ class TuningGUI:
         self.cap_tar_bt.grid(row=0, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.pitch_m_bt = tk.Button(self.frame_3, text='Pitch-v', font=button_font, width=button_w)
-        self.pitch_m_bt.bind('<Button-1>',
-                             lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1*delta_control, time_t=2000)))
+        self.pitch_m_bt.bind(
+            '<Button-1>',
+            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1 * delta_control, time_t=2000)))
         self.pitch_m_bt.grid(row=1, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.yaw_m_bt = tk.Button(self.frame_3, text='Yaw-<', font=button_font, width=button_w)
-        self.yaw_m_bt.bind('<Button-1>',lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1*delta_control, time_t=2000)))
+        self.yaw_m_bt.bind(
+            '<Button-1>',
+            lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1 * delta_control, time_t=2000)))
         self.yaw_m_bt.grid(row=1, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.roll_m_bt = tk.Button(self.frame_3, text='Roll-G', font=button_font, width=button_w)
-        self.roll_m_bt.bind('<Button-1>', lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1*delta_control, time_t=2000)))
+        self.roll_m_bt.bind(
+            '<Button-1>',
+            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1 * delta_control, time_t=2000)))
         self.roll_m_bt.grid(row=1, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_left_bt = tk.Button(self.frame_3, text='Left <', font=button_font, width=button_w)
@@ -322,8 +352,10 @@ class TuningGUI:
         self.cap_curr_bt.bind('<Button-3>', self._cap_curr_button_right_func)
         self.cap_curr_bt.grid(row=1, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
+        # ******************* BUTTON ROW 2 *********************
         self.stand_up_bt = tk.Button(self.frame_3, text='StandUp~', font=button_font, width=button_w)
-        self.stand_up_bt.bind('<Button-1>',lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_control, time_t=2000)))
+        self.stand_up_bt.bind(
+            '<Button-1>', lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_control, time_t=2000)))
         self.stand_up_bt.grid(row=2, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.release_machine_bt = tk.Button(self.frame_3, text='Release', font=button_font, width=button_w)
@@ -350,8 +382,11 @@ class TuningGUI:
         self.cam_mode_bt.bind('<Button-1>', self._cam_mode_button_func)
         self.cam_mode_bt.grid(row=2, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
+        # *******************  BUTTON ROW 3 *************
         self.sit_down_bt = tk.Button(self.frame_3, text='SitDown~', font=button_font, width=button_w)
-        self.sit_down_bt.bind('<Button-1>', lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1*delta_control, time_t=2000)))
+        self.sit_down_bt.bind(
+            '<Button-1>',
+            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1 * delta_control, time_t=2000)))
         self.sit_down_bt.grid(row=3, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.load_json_bt = tk.Button(self.frame_3, text='LoadJson', font=button_font, width=button_w)
@@ -377,6 +412,35 @@ class TuningGUI:
         self.hand_release_bt = tk.Button(self.frame_3, text='Hand-', font=button_font, width=button_w)
         self.hand_release_bt.bind('<Button-1>', self._buttun_none)
         self.hand_release_bt.grid(row=3, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+
+        # ******************** BUTTON ROW 4************
+        self.sit_down_bt = tk.Button(self.frame_3, text='CalibSnap', font=button_font, width=button_w)
+        self.sit_down_bt.bind('<Button-1>', self._calib_capture)
+        self.sit_down_bt.grid(row=4, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+
+        self.load_json_bt = tk.Button(self.frame_3, text='Calib', font=button_font, width=button_w)
+        self.load_json_bt.bind('<Button-1>', self._cam_calib_compute)
+        self.load_json_bt.grid(row=4, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+
+        self.save_json_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.save_json_bt.bind('<Button-1>', self._buttun_none)
+        self.save_json_bt.grid(row=4, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+
+        self.read_mode_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.read_mode_bt.bind('<Button-1>', self._buttun_none)
+        self.read_mode_bt.grid(row=4, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+
+        self.read_position_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.read_position_bt.bind('<Button-1>', self._buttun_none)
+        self.read_position_bt.grid(row=4, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+
+        self.hand_grap_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.hand_grap_bt.bind('<Button-1>', self._buttun_none)
+        self.hand_grap_bt.grid(row=4, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+
+        self.hand_release_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.hand_release_bt.bind('<Button-1>', self._buttun_none)
+        self.hand_release_bt.grid(row=4, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         # ******************* SERIAL ****************
         # var:
@@ -586,6 +650,128 @@ class TuningGUI:
         tk_img = ImageTk.PhotoImage(image=pil_img)
         return tk_img, cv_mat
 
+    def _calib_capture(self, x):
+        # for camera calib
+        if self.calib_step == 0:
+            self.receiver.insert('end', 'CALIB MODE, INPUT camera_id may calibed in SEND\nexample: 1, 2')
+            self.calib_step = 1
+            return
+        if self.calib_step == 1:
+            camera_id = self.send_command_entry.get()
+            if len(camera_id) > 0:
+                camera_id = camera_id.split(',')
+                self.calib_camera_id = [int(dd) for dd in camera_id]
+                self.calib_camera_type = 'single' if len(camera_id) == 1 else 'stereo'
+                self.receiver.insert('end', '\nCALIB MODE, camera_id: ' + str(camera_id) + 'camera type:',
+                                     self.calib_camera_type, '\nInput img_size:demo:1920,1080')
+                self.calib_step = 2
+            return
+        if self.calib_step == 2:
+            img_size = self.send_command_entry.get().split(',')
+            img_size = [int(dd) for dd in img_size]
+            self.calib_img_size = img_size
+            self.receiver.insert('end', '\ninput: calib_board_size: example: 7,7')
+            self.calib_step = 3
+            return
+
+        if self.calib_step == 3:
+            board_size = self.send_command_entry.get()
+            board_size = board_size.split(',')
+            if len(board_size) > 0:
+                board_size = [int(dd) for dd in board_size]
+                self.calib_board_size = board_size
+                self.receiver.insert(
+                    'end',
+                    '\nCALIB MODE, board_size: ' + str(self.calib_board_size) + '\ninput calib pattern: default:1')
+                self.calib_step = 4
+            return
+        if self.calib_step == 4:
+            self.calib_pattern = int(self.send_command_entry.get())
+            self.receiver.insert(
+                'end', '\ncalib pattern: ' + str(self.calib_pattern) + '\ninput physica_size: demo: 14.0,14.0')
+            self.calib_step = 5
+            return
+        if self.calib_step == 5:
+            physics_size = self.send_command_entry.get()
+            physics_size = physics_size.split(',')
+            if len(physics_size) > 0:
+                physics_size = [float(dd) for dd in physics_size]
+                self.calib_physics_size = physics_size
+                self.receiver.insert(
+                    'end', '\nphysics_size:' + str(self.calib_physics_size) +
+                    '\ninput save path and name: such as ./calib_saved p_main_ p_aux_ calib.xml')
+                self.calib_step = 6
+            return
+        if self.calib_step == 6:
+            calib_save_config = self.send_command_entry.get().split(' ')
+            if len(calib_save_config) > 2:
+                if len(self.calib_camera_id) == 1:
+                    # single camera calib
+                    self.calib_save_to = calib_save_config[0]
+                    self.calib_cam_main_name = calib_save_config[1]
+                    self.calib_cam_aux_name = 'NONE'
+                    self.calib_save_name = calib_save_config[2]
+                    if os.path.exists(self.calib_save_to):
+                        shutil.rmtree(self.calib_save_to)
+                    else:
+                        os.makedirs(self.calib_save_to)
+                if len(self.calib_camera_id) == 2:
+                    # single camera calib
+                    self.calib_save_to = calib_save_config[0]
+                    self.calib_cam_main_name = calib_save_config[1]
+                    self.calib_cam_aux_name = calib_save_config[2]
+                    self.calib_save_name = calib_save_config[3]
+                    if os.path.exists(self.calib_save_to):
+                        shutil.rmtree(self.calib_save_to)
+                    else:
+                        os.makedirs(self.calib_save_to)
+                self.receiver.insert(
+                    'end', '\n----save folder ok: ' + self.calib_save_to + ' ' + self.calib_cam_main_name + ' ' +
+                    self.calib_cam_aux_name + ' xml:' + self.calib_save_name)
+                self.calib_step = 7
+            return
+        if self.calib_step == 7:
+            if self.calib_cam_cap_thread == None:
+                if len(self.calib_camera_id) == 1:
+                    self.calib_cam_cap_thread = threading.Thread(target=self._thread_single_cam_calib)
+                    self.calib_cam_cap_thread.start()
+                    self.calib_snap_count = 0
+                    self.receiver.insert('end', '\n-----------CREAT CALIB STREAM-------')
+            else:
+                self.calib_step = 8
+            return
+
+    def _thread_single_cam_calib(self):
+        print('CALIB STREAM CREATE')
+        single_cam = SingleCam(cam_id=self.calib_camera_id[0],
+                               cam_size=(self.calib_img_size[0], self.calib_img_size[1]),
+                               cam_mode=self.calib_cam_open_mode)
+        self.calib_imgs = [[]]
+        if single_cam.OpenCam():
+            while self.calib_step == 7 or self.calib_step == 8:
+                snap = single_cam.SnapShoot()
+                if snap is None:
+                    break
+                snap_cp = cv2.resize(snap, (512, 384))
+                img_tk, snap_cp = self._get_tk_img(snap_cp)
+                self.monitor_tar.configure(image=img_tk)
+                self.monitor_tar.image = img_tk
+                if self.calib_step == 8:
+                    cv2.imwrite(
+                        os.path.join(self.calib_save_to,
+                                     self.calib_cam_main_name + str(self.calib_snap_count).zfill(4) + '.jpg'), snap)
+                    self.calib_imgs[0].append(snap.copy())
+                    self.calib_snap_count = self.calib_snap_count + 1
+                    self.receiver.insert('end', '\nsnap a pic and snap total: ' + str(self.calib_snap_count))
+                    self.calib_step = 7
+            single_cam.Close()
+            print('DEBUG CAMERA SNAP OVER')
+        return
+
+    def _cam_calib_compute(self, x):
+        self.calib_step = 0
+        # ********************************* NOT READY *************************
+
     def _thread_single(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
         sigle_cam = SingleCam(cam_id=self.cam_mode_single_cam_id)
@@ -618,7 +804,7 @@ class TuningGUI:
                 self.monitor_show.image = img_tk
                 # print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
         sigle_cam.Close()
-        
+
         return None
 
     def _thread_stereo(self):
@@ -644,7 +830,7 @@ class TuningGUI:
                 self.monitor_curr.configure(image=img_tk1)
                 self.monitor_curr.image = img_tk1
         stereo_cam.Close()
-        
+
         return None
 
     def _thread_1_track(self):
@@ -676,21 +862,21 @@ class TuningGUI:
                 self.monitor_show.image = img_tk
                 time.sleep(2)
         sigle_cam.Close()
-        
+
         return
 
     def _thread_1_l_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
         while True:
             print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
-        
+
         return
 
     def _thread_3d_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
         while True:
             print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
-        
+
         return
 
     def _destory_thread(self):

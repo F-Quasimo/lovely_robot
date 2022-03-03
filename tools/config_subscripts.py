@@ -43,8 +43,8 @@ class BaseScript:
 
     cam_mode_single_cam_id = 1
     cam_mode_stereo_cam_id = (2, 1)
-    cam_mode_stereo_cam_size = (1920,1080)
-    cam_open_mode = cv2.CAP_ANY
+    cam_mode_stereo_cam_size = (1920, 1080)
+    cam_open_mode = cv2.CAP_DSHOW
 
 
 class BaseConfig:

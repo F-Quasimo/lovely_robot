@@ -4,21 +4,24 @@ import cv2
 import numpy as np
 import platform
 
-class SingleCam:
 
-    def __init__(self, cam_id=0) :
+class SingleCam:
+    def __init__(self, cam_id=0, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW):
         self.cam_id = cam_id
         self.cap = None
-
+        self.cam_size = cam_size
+        self.cap_open_mode = cam_mode
 
     def OpenCam(self):
-        self.cap = cv2.VideoCapture(self.cam_id)
+        self.cap = cv2.VideoCapture(self.cam_id + self.cap_open_mode)
+        self.cap.open(self.cam_id)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.cam_size[0])
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.cam_size[1])
         if self.cap.isOpened():
             return True
         else:
             self.cap = None
             return False
-
 
     def SnapShoot(self):
         if self.cap != None and self.cap.isOpened():
@@ -32,9 +35,9 @@ class SingleCam:
             self.cap.release()
             self.cap = None
 
-class StereoCam:
 
-    def __init__(self, cam_id0, cam_id1, cam_size = (1920, 1080), cam_mode = cv2.CAP_DSHOW):
+class StereoCam:
+    def __init__(self, cam_id0, cam_id1, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW):
         self.cam_id0 = cam_id0
         self.cam_id1 = cam_id1
         self.cap0 = None
