@@ -106,8 +106,8 @@ class CalibStereo:
         self.camera_type = 'stereo' if len(imgs) == 1 else 'single'
         self.imgs = imgs
         self.pattern = pattern
-        self.board_size = board_size
-        self.physics_size = physics_size
+        self.board_size = (board_size[0], board_size[1])
+        self.physics_size = (physics_size[0], physics_size[1])
         self.aspect_ratio = 1.0
         self.win_size = (11, 11)
         self.grid_width = (physics_size[0] * (self.board_size[0] - 1), physics_size[1] * (self.board_size[1] - 1))
@@ -216,8 +216,8 @@ class CalibStereo:
             img_gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
             assert (img_gray0.shape[0] == self.img_size[1] and img_gray0.shape[1] == self.img_size[0]), \
                 "Image size does not match the given value {}.".format(self.img_size)
-            ret0, img0_corners = cv2.findChessboardCorners(img_gray0, (self.board_size[1], self.board_size[0]))
-            ret1, img1_corners = cv2.findChessboardCorners(img_gray1, (self.board_size[1], self.board_size[0]))
+            ret0, img0_corners = cv2.findChessboardCorners(img_gray0, (self.board_size[0], self.board_size[1]))
+            ret1, img1_corners = cv2.findChessboardCorners(img_gray1, (self.board_size[0], self.board_size[1]))
             if ret1 and ret0:
                 obj_corners = self._cal_real_corner(self.board_size[1], self.board_size[0], self.physics_size)
                 objs_corners.append(obj_corners)
@@ -366,7 +366,7 @@ physics_size=(16.4375, 15.875),
 '''
 
 if __name__ == '__main__':
-    file_path = r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\fascinating_calib_stereo'
+    file_path = r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\calib_stereo'
     file_strs = os.listdir(file_path)
     img0_str = [d for d in file_strs if 'main' in d]
     img1_str = [d for d in file_strs if 'aux' in d]

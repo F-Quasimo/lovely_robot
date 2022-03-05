@@ -19,7 +19,7 @@ from config_subscripts import base_script, base_config
 from config_fasci import fasci_config
 from camera_mode import SingleCam, StereoCam
 from motion_act import RobotArm
-from camera_calib import LovelyCalibTool
+from camera_calib import LovelyCalibTool, CalibStereo
 
 
 class SerialRobot:
@@ -741,8 +741,7 @@ class TuningGUI:
                     self.calib_save_name = calib_save_config[2]
                     if os.path.exists(self.calib_save_to):
                         shutil.rmtree(self.calib_save_to)
-                    else:
-                        os.makedirs(self.calib_save_to)
+                    os.makedirs(self.calib_save_to)
                 if len(self.calib_camera_id) == 2:
                     # single camera calib
                     self.calib_save_to = calib_save_config[0]
@@ -751,8 +750,7 @@ class TuningGUI:
                     self.calib_save_name = calib_save_config[3]
                     if os.path.exists(self.calib_save_to):
                         shutil.rmtree(self.calib_save_to)
-                    else:
-                        os.makedirs(self.calib_save_to)
+                    os.makedirs(self.calib_save_to)
                 self.receiver.insert(
                     'end', '\n----save folder ok: ' + self.calib_save_to + ' ' + self.calib_cam_main_name + ' ' +
                     self.calib_cam_aux_name + ' xml:' + self.calib_save_name)
@@ -813,8 +811,30 @@ class TuningGUI:
                 if snap0 is None or snap1 is None:
                     print('DEBUG snap0 or snap1 None')
                     break
+
+                ret0, corners0 = cv2.findChessboardCorners(image=snap0,
+                                                           patternSize=(self.calib_board_size[1],
+                                                                        self.calib_board_size[0]))
+                ret1, corners1 = cv2.findChessboardCorners(image=snap1,
+                                                           patternSize=(self.calib_board_size[1],
+                                                                        self.calib_board_size[0]))
                 snap0_cp = cv2.resize(snap0.copy(), (512, 288))
                 snap1_cp = cv2.resize(snap1.copy(), (512, 288))
+                ratio_x = self.calib_img_size[0] / snap0_cp.shape[1]
+                ratio_y = self.calib_img_size[1] / snap0_cp.shape[0]
+                if (ratio_x == ratio_y) and ret0 and ret1:
+                    corners0 = corners0 / ratio_x
+                    corners1 = corners1 / ratio_x
+                    snap0_cp = cv2.drawChessboardCorners(image=snap0_cp,
+                                                         patternSize=(self.calib_board_size[0],self.calib_board_size[1]),
+                                                         corners=corners0,
+                                                         patternWasFound=ret0)
+                    snap1_cp = cv2.drawChessboardCorners(image=snap1_cp,
+                                                         patternSize=(self.calib_board_size[0],
+                                                                      self.calib_board_size[1]),
+                                                         corners=corners1,
+                                                         patternWasFound=ret1)
+
                 img_tk0, snap0_cp = self._get_tk_img(snap0_cp)
                 img_tk1, snap1_cp = self._get_tk_img(snap1_cp)
                 self.monitor_tar.configure(image=img_tk0)
@@ -839,7 +859,10 @@ class TuningGUI:
 
     def _cam_calib_compute(self, x):
         self.calib_step = 0
+        print('DEBUG Calib Process Start')
+        print('DEBUG Calib\n', 'len of imgs: ', len(self.calib_imgs), '\nboard size')
         if len(self.calib_camera_id) == 1:
+            print('DEBUG CalibSingle Process Start')
             calib_tool = LovelyCalibTool(imgs=self.calib_imgs,
                                          board_size=self.calib_board_size,
                                          pattern=self.calib_pattern,
@@ -848,22 +871,30 @@ class TuningGUI:
                                          calib_save_name=self.calib_save_name)
             calib_tool.Run()
         elif len(self.calib_camera_id) == 2:
-            calib_tool_main = LovelyCalibTool(imgs=self.calib_imgs[0],
-                                              board_size=self.calib_board_size,
-                                              pattern=self.calib_pattern,
-                                              physics_size=self.calib_physics_size,
-                                              calib_save_to=self.calib_save_to,
-                                              calib_save_name='calib_main_tmp.xml')
-            self.calib_main_cameraMatrix, self.calib_main_distCoeffs, self.calib_main_optimal_matrix = calib_tool_main.CalibOneCamera(
-            )
-            calib_tool_aux = LovelyCalibTool(imgs=self.calib_imgs[1],
-                                             board_size=self.calib_board_size,
-                                             pattern=self.calib_pattern,
-                                             physics_size=self.calib_physics_size,
-                                             calib_save_to=self.calib_save_to,
-                                             calib_save_name='calib_aux_tmp.xml')
-            self.calib_aux_cameraMatrix, self.calib_aux_distCoeffs, self.calib_aux_optimal_matrix = calib_tool_aux.CalibOneCamera(
-            )
+            # calib_tool_main = LovelyCalibTool(imgs=self.calib_imgs[0],
+            #                                   board_size=self.calib_board_size,
+            #                                   pattern=self.calib_pattern,
+            #                                   physics_size=self.calib_physics_size,
+            #                                   calib_save_to=self.calib_save_to,
+            #                                   calib_save_name='calib_main_tmp.xml')
+            # self.calib_main_cameraMatrix, self.calib_main_distCoeffs, self.calib_main_optimal_matrix = calib_tool_main.CalibOneCamera(
+            # )
+            # calib_tool_aux = LovelyCalibTool(imgs=self.calib_imgs[1],
+            #                                  board_size=self.calib_board_size,
+            #                                  pattern=self.calib_pattern,
+            #                                  physics_size=self.calib_physics_size,
+            #                                  calib_save_to=self.calib_save_to,
+            #                                  calib_save_name='calib_aux_tmp.xml')
+            # self.calib_aux_cameraMatrix, self.calib_aux_distCoeffs, self.calib_aux_optimal_matrix = calib_tool_aux.CalibOneCamera(
+            # )
+            print('DEBUG CalibStereo Process Start')
+            calib_tool = CalibStereo(imgs=self.calib_imgs,
+                                     board_size=self.calib_board_size,
+                                     pattern=self.calib_pattern,
+                                     physics_size=self.calib_physics_size,
+                                     calib_save_to=self.calib_save_to,
+                                     calib_save_name=self.calib_save_name)
+            calib_tool.Run()
 
     def _thread_single(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
