@@ -159,6 +159,12 @@ class TuningGUI:
         self.calib_cam_cap_thread = None
         self.calib_snap_count = 0
         # step 7 start camera stream step 8: take calib imgs
+        self.calib_main_cameraMatrix = None
+        self.calib_main_distCoeffs = None
+        self.calib_main_optimal_matrix = None
+        self.calib_aux_cameraMatrix = None
+        self.calib_aux_distCoeffs = None
+        self.calib_aux_optimal_matrix = None
 
         # **************************************************************
         self.monitor = tk.PanedWindow(self.frame_main, orient=tk.VERTICAL)
@@ -841,6 +847,23 @@ class TuningGUI:
                                          calib_save_to=self.calib_save_to,
                                          calib_save_name=self.calib_save_name)
             calib_tool.Run()
+        elif len(self.calib_camera_id) == 2:
+            calib_tool_main = LovelyCalibTool(imgs=self.calib_imgs[0],
+                                              board_size=self.calib_board_size,
+                                              pattern=self.calib_pattern,
+                                              physics_size=self.calib_physics_size,
+                                              calib_save_to=self.calib_save_to,
+                                              calib_save_name='calib_main_tmp.xml')
+            self.calib_main_cameraMatrix, self.calib_main_distCoeffs, self.calib_main_optimal_matrix = calib_tool_main.CalibOneCamera(
+            )
+            calib_tool_aux = LovelyCalibTool(imgs=self.calib_imgs[1],
+                                             board_size=self.calib_board_size,
+                                             pattern=self.calib_pattern,
+                                             physics_size=self.calib_physics_size,
+                                             calib_save_to=self.calib_save_to,
+                                             calib_save_name='calib_aux_tmp.xml')
+            self.calib_aux_cameraMatrix, self.calib_aux_distCoeffs, self.calib_aux_optimal_matrix = calib_tool_aux.CalibOneCamera(
+            )
 
     def _thread_single(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])

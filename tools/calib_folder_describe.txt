@@ -1,5 +1,8 @@
 calib_saved_bck:
     calib file and img for original 0.3M camera
 
-calib_stereo_main:
-    calib file and img for left 2M camera
+calib_stereo_wrong:
+    calib file for stereo camera but the findchessboard get different sequence in inner corners. so bad calib result will get
+
+fascinating_calib_stereo:
+    usefull calib. captured in my bedroom~ 
