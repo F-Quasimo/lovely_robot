@@ -20,6 +20,7 @@ class BaseScript:
     ]
     steering_straighten = '#000P1500T3000!#001P1500T3000!#002P1500T3000!#003P1500T3000!#004P1500T3000!#005P1500T3000!'
     steering_half_straighten = '#000P1496T3000!#001P2294T3000!#002P2255T3000!#003P1936T3000!#004P1477T3000!'
+    steering_pos = '#000P1498T2000!#001P1797T2000!#002P2170T2000!#003P2061T2000!#004P1498T2000!'
     # for |    3.7V    |  7.4V
     #     | 100 | 4.2  |  8.4
     #     |  90 | 4.08 |  8.16
@@ -41,14 +42,14 @@ class BaseScript:
     init_set_power_on_release = '#000PCSM!#001PCSM!#002PCSM!#003PCSM!#004PCSM!#005PCSM!'
     init_set_steering_mode = '#000PMOD1!#001PMOD3!#002PMOD1!#003PMOD1!#004PMOD1!#005PMOD3!'
 
-    cam_mode_single_cam_id = 1
-    cam_mode_stereo_cam_id = (2, 1)
+    cam_mode_single_cam_id = 0
+    cam_mode_stereo_cam_id = (0, 2)
     cam_mode_stereo_cam_size = (1920, 1080)
     cam_open_mode = cv2.CAP_DSHOW
 
 
 class BaseConfig:
-    calib_path = './calib_stereo_main/calib_main.xml'
+    calib_path = './fascinating_calib_stereo/calib_stereo.xml'
 
 
 base_script = BaseScript()

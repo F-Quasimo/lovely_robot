@@ -41,6 +41,19 @@ class SteeringMoto:
 
         return command_str, posi
 
+    def GetRunPwmCommand(self, pwm_delta, current, time_t):
+        # angle: delta_angle
+        # turn follow clock angle = -, else = +
+        posi = int(pwm_delta * self.plus_direction + current)
+        if posi > self.P_LIMIT_MAX:
+            posi = self.P_LIMIT_MAX
+        if posi < self.P_LIMIT_MIN:
+            posi = self.P_LIMIT_MIN
+
+        command_str = self.command_head + str(posi).zfill(4) + 'T' + str(time_t).zfill(4) + '!'
+
+        return command_str, posi
+
     def DecodeCurrPosiCommand(self, command_return):
         # #000P1500!
         posi = int(command_return[5:9])
@@ -101,6 +114,26 @@ class RobotArm:
         self.joint_3_position = 1500
         self.joint_4_position = 1500
         self.joint_5_position = 1500
+        self.joint_0_diverge_angle = 0
+        self.joint_1_diverge_angle = 0
+        self.joint_2_diverge_angle = 0
+        self.joint_3_diverge_angle = 0
+        self.joint_4_diverge_angle = 0
+        self.joint_5_diverge_angle = 0
+
+    def UpdateSteerPosition(self,
+                            joint_0_position,
+                            joint_1_position,
+                            joint_2_position,
+                            joint_3_position,
+                            joint_4_position,
+                            joint_5_position):
+        self.joint_0_position = joint_0_position
+        self.joint_1_position = joint_1_position
+        self.joint_2_position = joint_2_position
+        self.joint_3_position = joint_3_position
+        self.joint_4_position = joint_4_position
+        self.joint_5_position = joint_5_position
         self.joint_0_diverge_angle = 0
         self.joint_1_diverge_angle = 0
         self.joint_2_diverge_angle = 0

@@ -17,10 +17,12 @@ class SingleCam:
         self.cap.open(self.cam_id)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.cam_size[0])
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.cam_size[1])
+        print('DEBUG SingleCam OpenCam')
         if self.cap.isOpened():
             return True
         else:
             self.cap = None
+            print('DEBUG SingleCam OpenCam FAIL')
             return False
 
     def SnapShoot(self):

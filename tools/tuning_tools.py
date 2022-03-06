@@ -20,6 +20,8 @@ from config_fasci import fasci_config
 from camera_mode import SingleCam, StereoCam
 from motion_act import RobotArm
 from camera_calib import LovelyCalibTool, CalibStereo
+from wheels import Wheels
+from status_control import MotionStatus
 
 
 class SerialRobot:
@@ -127,14 +129,19 @@ class TuningGUI:
 
         # **** Read Calib single camera
         fs_read_calib = cv2.FileStorage(base_config.calib_path, cv2.FileStorage_READ)
-        self.camera_matrix = fs_read_calib.getNode('camera_matrix').mat()
-        self.optimal_matrix = fs_read_calib.getNode('optimal_matrix').mat()
-        self.distortion = fs_read_calib.getNode('distortion').mat()
+        self.camera_matrix = fs_read_calib.getNode('cameraMatrix_0').mat()
+        self.optimal_matrix = fs_read_calib.getNode('optimal_matrix_0').mat()
+        self.distortion = fs_read_calib.getNode('distCoeffs_0').mat()
         fs_read_calib.release()
 
         # define robot arm
         self.robot_arm = RobotArm()
 
+        # define foot
+        self.foot = Wheels()
+        self.foot_base_speed=500
+        self.foot_base_time=20
+        self.motion_status = MotionStatus(self.foot)
         # ***** for calib
         # 0 for default ,
         self.calib_step = 0
@@ -295,24 +302,26 @@ class TuningGUI:
         delta_mini_move = 0.5
         self.pitch_p_bt = tk.Button(self.frame_3, text='Pitch+^', font=button_font, width=button_w)
         self.pitch_p_bt.bind('<Button-1>',
-                             lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_move, time_t=2000)))
+                             lambda event: self._send_command(self.motion_status.PitchUp(delta_x=delta_move, time_t=2000)))
         self.pitch_p_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=delta_mini_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.PitchUp(delta_x=delta_mini_move, time_t=2000)))
         self.pitch_p_bt.grid(row=0, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.yaw_p_bt = tk.Button(self.frame_3, text='Yaw+>', font=button_font, width=button_w)
         self.yaw_p_bt.bind('<Button-1>',
-                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=delta_move, time_t=2000)))
-        self.yaw_p_bt.bind('<Button-3>',
-                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=delta_mini_move, time_t=2000)))
+                           lambda event: self._send_command(self.motion_status.YawUp(delta_x=delta_move, time_t=2000)))
+        self.yaw_p_bt.bind(
+            '<Button-3>',
+            lambda event: self._send_command(self.motion_status.YawUp(delta_x=delta_mini_move, time_t=2000)))
         self.yaw_p_bt.grid(row=0, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.roll_p_bt = tk.Button(self.frame_3, text='Roll+@', font=button_font, width=button_w)
         self.roll_p_bt.bind('<Button-1>',
-                            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=delta_move, time_t=2000)))
+                            lambda event: self._send_command(self.motion_status.RollUp(delta_x=delta_move, time_t=2000)))
         self.roll_p_bt.bind(
-            '<Button-3>', lambda event: self._send_command(self.robot_arm.RollUp(delta_x=delta_mini_move, time_t=2000)))
+            '<Button-3>',
+            lambda event: self._send_command(self.motion_status.RollUp(delta_x=delta_mini_move, time_t=2000)))
         self.roll_p_bt.grid(row=0, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_lf_bt = tk.Button(self.frame_3, text='LF', font=button_font, width=button_w)
@@ -320,7 +329,9 @@ class TuningGUI:
         self.run_lf_bt.grid(row=0, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_f_bt = tk.Button(self.frame_3, text='Forward ^', font=button_font, width=button_w)
-        self.run_f_bt.bind('<Button-1>', self._buttun_none)
+        self.run_f_bt.bind(
+            '<Button-1>',
+            lambda event: self._send_command(self.foot.FrontTranslation(speed=self.foot_base_speed, time_run=self.foot_base_time)))
         self.run_f_bt.grid(row=0, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_rf_bt = tk.Button(self.frame_3, text='RF', font=button_font, width=button_w)
@@ -335,38 +346,39 @@ class TuningGUI:
         self.pitch_m_bt = tk.Button(self.frame_3, text='Pitch-v', font=button_font, width=button_w)
         self.pitch_m_bt.bind(
             '<Button-1>',
-            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1 * delta_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.PitchUp(delta_x=-1 * delta_move, time_t=2000)))
         self.pitch_m_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.robot_arm.PitchUp(delta_x=-1 * delta_mini_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.PitchUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.pitch_m_bt.grid(row=1, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.yaw_m_bt = tk.Button(self.frame_3, text='Yaw-<', font=button_font, width=button_w)
         self.yaw_m_bt.bind('<Button-1>',
-                           lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1 * delta_move, time_t=2000)))
+                           lambda event: self._send_command(self.motion_status.YawUp(delta_x=-1 * delta_move, time_t=2000)))
         self.yaw_m_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.robot_arm.YawUp(delta_x=-1 * delta_mini_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.YawUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.yaw_m_bt.grid(row=1, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.roll_m_bt = tk.Button(self.frame_3, text='Roll-G', font=button_font, width=button_w)
         self.roll_m_bt.bind(
-            '<Button-1>', lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1 * delta_move, time_t=2000)))
+            '<Button-1>',
+            lambda event: self._send_command(self.motion_status.RollUp(delta_x=-1 * delta_move, time_t=2000)))
         self.roll_m_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.robot_arm.RollUp(delta_x=-1 * delta_mini_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.RollUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.roll_m_bt.grid(row=1, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_left_bt = tk.Button(self.frame_3, text='Left <', font=button_font, width=button_w)
-        self.run_left_bt.bind('<Button-1>', self._buttun_none)
+        self.run_left_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.LeftTranslation(speed=self.foot_base_speed, time_run=self.foot_base_time)))
         self.run_left_bt.grid(row=1, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_pause_bt = tk.Button(self.frame_3, text='Run', font=button_font, width=button_w)
-        self.run_pause_bt.bind('<Button-1>', self._buttun_none)
+        self.run_pause_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.FrontTranslation(speed=0, time_run=self.foot_base_time)))
         self.run_pause_bt.grid(row=1, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_right_bt = tk.Button(self.frame_3, text='Right >', font=button_font, width=button_w)
-        self.run_right_bt.bind('<Button-1>', self._buttun_none)
+        self.run_right_bt.bind('<Button-1>',lambda event: self._send_command(self.foot.LeftTranslation(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
         self.run_right_bt.grid(row=1, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.cap_curr_bt = tk.Button(self.frame_3, text='CapCurr', font=button_font, width=button_w)
@@ -377,10 +389,10 @@ class TuningGUI:
         # ******************* BUTTON ROW 2 *********************
         self.stand_up_bt = tk.Button(self.frame_3, text='StandUp~', font=button_font, width=button_w)
         self.stand_up_bt.bind('<Button-1>',
-                              lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_move, time_t=2000)))
+                              lambda event: self._send_command(self.motion_status.StandUp(delta_x=delta_move, time_t=2000)))
         self.stand_up_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=delta_mini_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.StandUp(delta_x=delta_mini_move, time_t=2000)))
         self.stand_up_bt.grid(row=2, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.release_machine_bt = tk.Button(self.frame_3, text='Release', font=button_font, width=button_w)
@@ -392,15 +404,16 @@ class TuningGUI:
         self.regain_bt.grid(row=2, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_l_circle_bt = tk.Button(self.frame_3, text='L_Circle', font=button_font, width=button_w)
-        self.run_l_circle_bt.bind('<Button-1>', self._buttun_none)
+        self.run_l_circle_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.TurnLeft(speed=self.foot_base_speed, time_run=self.foot_base_time)))
         self.run_l_circle_bt.grid(row=2, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_retreat_bt = tk.Button(self.frame_3, text='Retreat v', font=button_font, width=button_w)
-        self.run_retreat_bt.bind('<Button-1>', self._buttun_none)
+        self.run_retreat_bt.bind('<Button-1>',
+                                 lambda event: self._send_command(self.foot.FrontTranslation(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
         self.run_retreat_bt.grid(row=2, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.run_r_circle_bt = tk.Button(self.frame_3, text='R_Circle', font=button_font, width=button_w)
-        self.run_r_circle_bt.bind('<Button-1>', self._buttun_none)
+        self.run_r_circle_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.TurnLeft(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
         self.run_r_circle_bt.grid(row=2, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.cam_mode_bt = tk.Button(self.frame_3, text=self.cam_mode[0], font=button_font, width=button_w)
@@ -411,10 +424,10 @@ class TuningGUI:
         self.sit_down_bt = tk.Button(self.frame_3, text='SitDown~', font=button_font, width=button_w)
         self.sit_down_bt.bind(
             '<Button-1>',
-            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1 * delta_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.StandUp(delta_x=-1 * delta_move, time_t=2000)))
         self.sit_down_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.robot_arm.StandUp(delta_x=-1 * delta_mini_move, time_t=2000)))
+            lambda event: self._send_command(self.motion_status.StandUp(delta_x=-1 * delta_mini_move, time_t=2000)))
         self.sit_down_bt.grid(row=3, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         self.load_json_bt = tk.Button(self.frame_3, text='LoadJson', font=button_font, width=button_w)
@@ -915,6 +928,7 @@ class TuningGUI:
                     self.monitor_tar.image = img_tk
                     self.np_tar = snap.copy()
                     self.cap_tar_snapped = True
+                    cv2.imwrite(r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\tar.jpg', self.np_tar)
                 if not self.cap_curr_snap:
                     self.monitor_curr.configure(image=img_tk)
                     self.monitor_curr.image = img_tk
@@ -925,6 +939,7 @@ class TuningGUI:
                     self.cap_curr_snapped = True
                     dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr, 'cam_matrix': self.camera_matrix}
                     fasci_config.SingleCamOnCall(**dic)
+                    cv2.imwrite(r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\cur.jpg', self.np_curr)
                 self.monitor_show.configure(image=img_tk)
                 self.monitor_show.image = img_tk
                 # print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
@@ -963,8 +978,10 @@ class TuningGUI:
         sigle_cam = SingleCam(cam_id=self.cam_mode_single_cam_id)
         if sigle_cam.OpenCam():
             while True:
+
                 snap = sigle_cam.SnapShoot()
                 if snap is None:
+                    print('DEBUG snap is NULL')
                     break
                 snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
                 snap_cp = cv2.resize(snap.copy(), (512, 288))
@@ -983,7 +1000,8 @@ class TuningGUI:
                     self.np_curr = snap.copy()
                     self.cap_curr_snapped = True
                     dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr, 'cam_matrix': self.camera_matrix}
-                    fasci_config.SingleCamOnCall(**dic)
+                    dic = fasci_config.SingleCamOnCall(**dic)
+                    self._send_command(self.motion_status.ConditionReflex(**dic, time_t=1000))
                 self.monitor_show.configure(image=img_tk)
                 self.monitor_show.image = img_tk
                 time.sleep(2)
@@ -1051,7 +1069,7 @@ class TuningGUI:
         time.sleep(1)
         self._send_command(base_script.steering_read_pos)
         time.sleep(1)
-        self.robot_arm.UpdateSteerPositionBySerialReturn(self.my_serial.receiver_buffer)
+        self.motion_status.UpdateCurrPwmFromSerial(self.my_serial.receiver_buffer)
         self.my_serial.SetReceiverCallBack([self._receiver_callback])
 
     def Run(self):
