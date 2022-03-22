@@ -79,6 +79,7 @@ class SerialRobot:
     def Send(self, buffer):
         status_ = self.my_serial.isOpen()
         if status_ == True:
+            print('DEBUG BUFFER SEND: ', buffer.encode('ascii'))
             self.my_serial.write(buffer.encode('ascii'))
         else:
             print('ERROR IN SERIAL SEND! SERIAL IS NOT OPEN\n')
@@ -983,7 +984,7 @@ class TuningGUI:
                 if snap is None:
                     print('DEBUG snap is NULL')
                     break
-                snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
+                #snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
                 snap_cp = cv2.resize(snap.copy(), (512, 288))
                 img_tk, snap_cp = self._get_tk_img(snap_cp)
                 if not self.cap_tar_snap:
@@ -1004,7 +1005,7 @@ class TuningGUI:
                     self._send_command(self.motion_status.ConditionReflex(**dic, time_t=1000))
                 self.monitor_show.configure(image=img_tk)
                 self.monitor_show.image = img_tk
-                time.sleep(2)
+                #time.sleep(2)
         sigle_cam.Close()
 
         return

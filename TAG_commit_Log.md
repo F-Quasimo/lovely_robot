@@ -10,3 +10,7 @@ describe:
     v4l2-ctl -d /dev/video0 --all
     v4l2-ctl -d /dev/video2 --list-formats
     for more info.
+    doesnt matter: set timeoout: in terminal:
+    onece: modprobe uvcvideo nodrop=1 timeout=6000
+    forever:  modprobe uvcvideo nodrop=1 timeout=6000
+    sudo gedit /etc/modprobe.d/modprobe.conf

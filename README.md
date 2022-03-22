@@ -11,6 +11,18 @@ I am a C++ programmer major on computer vision, so some of my code is not follow
 # tutorials
 in this respo, you will get to know how to build a robot with raspberry pi. It may contains: Camera calibration \ stereo camera calibration(for advance) \ serial communication \ steering control \ image processing with opencv
 
+## suggest: USE MY 64BITs OS img
+why change raspberry os to my os img?
+1) differ from others, my img is 64bits, which means more bits in cpu can be used.
+2) default conda env was configurated, with pytorch and torchvision. Also, a YOLOX object detection demo can be run.(/home/pi/github/YOLOX/YOLOX-outputs). Sounds crazy.
+3) username is : pi ; password is raspberry ; but no create-ap by init, so if you dont have a micro-hdmi, there is a hard way: use your phone make a hotpoint:SSID:"NETGEAR", password:"qazwsxed", and ssh or VNC from your pc.
+4) over_voltage and over_freq to 1.85GHz, by default, so plug-in a powerfull elec or delete "*freq *volt" in /boot/config.txt before boot.
+5) backup your OS img.
+U can get my OS img in https://drive.google.com/file/d/1sVcg3a_ZkeueHfw6wLsLdO8kOLZtYnCf/view?usp=sharing
+OR install \ config \ compile pytorch etc on your own. many accident will happen, good luck.
+
+PS: something interesting during my work was recorded. See TAG_commit_log.md for important commit, and doc/somthing_interesting.md for detail.
+
 ## How to use tuning_tools?
 why i build a tuning tools?
 

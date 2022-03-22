@@ -13,6 +13,7 @@ class SingleCam:
         self.cap_open_mode = cam_mode
 
     def OpenCam(self):
+        self.Close()
         self.cap = cv2.VideoCapture(self.cam_id + self.cap_open_mode)
         self.cap.open(self.cam_id)
         self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
@@ -34,6 +35,8 @@ class SingleCam:
             return None
 
     def Close(self):
+        if self.cap is None:
+            return
         if self.cap.isOpened():
             self.cap.release()
             self.cap = None
@@ -49,6 +52,7 @@ class StereoCam:
         self.cap_open_mode = cam_mode
 
     def OpenCam(self):
+        self.Close()
         self.cap0 = cv2.VideoCapture(self.cam_id0 + self.cap_open_mode)
         self.cap0.open(self.cam_id0)
         self.cap0.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
