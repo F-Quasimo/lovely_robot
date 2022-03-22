@@ -1,7 +1,13 @@
 # lovely_robot
 a vehicle robot with stereo camera made of raspberry Pi
 
-<img src="./pic_img/my_robot.jpg" width = "300" height = "400" alt="my_robot" />
+
+
+
+|  what   | looks  | like |
+|  ----  | ----  | ---- |
+| Robot | <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" /> | this robot looks like |
+| pi and YOLOX | <img src="./pic_img/yolox_s_xinbaodao_hd.gif" width = "484" height = "272" alt="my_robot" />  | more interesting thing is coming |
 
 
 ## introduce
