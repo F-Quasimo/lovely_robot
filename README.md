@@ -1,13 +1,12 @@
 # lovely_robot
-a vehicle robot with stereo camera made of raspberry Pi
+
+A Robot; YOLOX run on raspberry PI; object detection; object tracking; stereo matching and 3D reconstruction (camera calib is included); 
 
 
-
-
-|  what   | looks  | like |
-|  ----  | ----  | ---- |
-| Robot | <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" /> | this robot looks like |
-| pi and YOLOX | <img src="./pic_img/yolox_s_xinbaodao_hd.gif" width = "484" height = "272" alt="my_robot" />  | more interesting thing is coming |
+| robot  | YOLOX running on raspberry PI  |
+| ----  | ---- |
+| <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" /> |  <img src="./pic_img/yolox_s_xinbaodao_hd.gif" width = "484" height = "272" alt="my_robot" />  |
+| **Master tracking is Coming** | **Stereo-Matching-3D-reconstruction is coming** |
 
 
 ## introduce
