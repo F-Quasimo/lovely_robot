@@ -621,6 +621,8 @@ class TuningGUI:
         self._robot_init()
 
     def _send_command(self, command=None):
+        if self.my_serial is None:
+            return
         if self.my_serial.IsOpen():
             if command == None:
                 self.command_send_buffer = self.send_command_entry.get()
