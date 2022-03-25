@@ -117,6 +117,14 @@ class TuningGUI:
         self.cam_mode = ['SingleCam', 'Stereo', '1_Track', '1_L_Track', '3DTrack']
         self.cam_mode_flag = 0
         self.cam_mode_thread = [None] * len(self.cam_mode)
+        self.cam_mode_thread_flag = [False] * len(self.cam_mode)
+        self.thread_single_flag = 0
+        self.thread_stereo_flag = 1
+        self.thread_1_track_flag = 2
+        self.thread_1_l_track_flag = 3
+        self.thread_3d_track_flag = 4
+
+
 
         # click for grap video stream right click for snap
         self.cap_curr_snap = False
@@ -671,21 +679,31 @@ class TuningGUI:
         return True
 
     def _create_thread(self):
-        self._destory_thread()
-        if self.cam_mode_flag == 0:
+        #self._destory_thread()
+        if self.cam_mode_flag == self.thread_single_flag:
             self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_single)
+            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
-        if self.cam_mode_flag == 1:
+        if self.cam_mode_flag == self.thread_stereo_flag:
             self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_stereo)
+            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
-        if self.cam_mode_flag == 2:
+        if self.cam_mode_flag == self.thread_1_track_flag:
             self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_1_track)
+            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
-        if self.cam_mode_flag == 3:
+        if self.cam_mode_flag == self.thread_1_l_track_flag:
             self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_1_l_track)
+            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
-        if self.cam_mode_flag == 4:
+        if self.cam_mode_flag == self.thread_3d_track_flag:
             self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_3d_track)
+            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
 
     def _get_tk_img(self, cv_mat):
@@ -916,7 +934,7 @@ class TuningGUI:
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
         sigle_cam = SingleCam(cam_id=self.cam_mode_single_cam_id)
         if sigle_cam.OpenCam():
-            while True:
+            while True and self.cam_mode_thread_flag[self.thread_single_flag]:
                 snap = sigle_cam.SnapShoot()
                 if snap is None:
                     break
@@ -957,7 +975,7 @@ class TuningGUI:
                                cam_size=self.cam_mode_stereo_cam_size,
                                cam_mode=self.cam_open_mode)
         if stereo_cam.OpenCam():
-            while True:
+            while True and self.cam_mode_thread_flag[self.thread_stereo_flag]:
                 snap0, snap1 = stereo_cam.SnapShoot()
                 if snap0 is None or snap1 is None:
                     break
@@ -980,7 +998,7 @@ class TuningGUI:
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
         sigle_cam = SingleCam(cam_id=self.cam_mode_single_cam_id)
         if sigle_cam.OpenCam():
-            while True:
+            while True and self.cam_mode_thread_flag[self.thread_1_track_flag]:
 
                 snap = sigle_cam.SnapShoot()
                 if snap is None:
@@ -1014,14 +1032,14 @@ class TuningGUI:
 
     def _thread_1_l_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
-        while True:
+        while True and self.cam_mode_thread_flag[self.thread_1_l_track_flag]:
             print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
 
         return
 
     def _thread_3d_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
-        while True:
+        while True and self.cam_mode_thread_flag[self.thread_3d_track_flag]:
             print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
 
         return
@@ -1029,7 +1047,11 @@ class TuningGUI:
     def _destory_thread(self):
         for idx, thread_idx in enumerate(self.cam_mode_thread):
             if thread_idx is not None:
-                self._async_raise(thread_idx.ident, SystemExit)
+                try:
+                    self._async_raise(thread_idx.ident, SystemExit)
+                except:
+                    print('ASYNC_RAISE\n')
+
                 self.cam_mode_thread[idx] = None
                 print('SUB THREAD KILL : ', self.cam_mode[idx])
 
