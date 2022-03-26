@@ -32,6 +32,7 @@ class RoboSerial:
         self.receiver_callbacks = receiver_callbacks
         self.unibus = unibus
         self.sending_flag = False
+        self.receiver_hang_up = False
 
     def SetReceiverCallBack(self, call_backs):
         self.receiver_callbacks = call_backs
@@ -51,14 +52,19 @@ class RoboSerial:
     def _thread_receive(self):
         while self.receiver_thread_flag:
             if self.unibus and self.sending_flag:
-                continue
+                while self.sending_flag:
+                    #print('SENDING~ waiting ', self.receiver_hang_up)
+                    self.receiver_hang_up = True
+                self.receiver_buffer = ''
+                self.receiver_hang_up = False
+                pass
             else:
                 read = self.my_serial.readall()
                 if len(read) > 0:
                     self.receiver_buffer = str(bytes(read).decode('utf-8', "ignore"))
                     for func in self.receiver_callbacks:
                         func(self.receiver_buffer)
-                    print(self.receiver_buffer, ' ', self.receiver_callbacks)
+                    print('RECEIVER ',self.receiver_buffer, ' ', self.receiver_callbacks)
 
     def Open(self):
         self.my_serial = serial.Serial(port=self.port,
@@ -75,6 +81,8 @@ class RoboSerial:
     def Send(self, buffer):
         if self.unibus:
             self.sending_flag = True
+            while not self.receiver_hang_up:
+                pass
         status_ = self.my_serial.isOpen()
         if status_ == True:
             print('DEBUG BUFFER SEND: ', buffer.encode('ascii'))
@@ -83,6 +91,7 @@ class RoboSerial:
         else:
             print('ERROR IN SERIAL SEND! SERIAL IS NOT OPEN\n')
         if self.unibus:
+            read = self.my_serial.readall()
             self.receiver_buffer = ''
             self.sending_flag = False
 
@@ -106,7 +115,7 @@ class RoboSerial:
         # self._async_raise(self.receiver_thread.ident, SystemExit)
         
 if __name__ == '__main__':
-    robo_serial = RoboSerial(com_port='/dev/ttyS0',unibus=False)
+    robo_serial = RoboSerial(com_port='/dev/ttyS0',unibus=True)
     robo_serial.Open()
     robo_serial.Send(buffer='SEND And Open Serial OK')
     while True:
