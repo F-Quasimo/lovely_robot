@@ -46,6 +46,7 @@ class BaseScript:
     cam_mode_stereo_cam_id = (0, 2)
     cam_mode_stereo_cam_size = (1920, 1080)
     cam_open_mode = cv2.CAP_DSHOW
+    serial_prefer = '/dev/ttyS0'
 
 
 class BaseConfig:

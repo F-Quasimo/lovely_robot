@@ -22,86 +22,7 @@ from motion_act import RobotArm
 from camera_calib import LovelyCalibTool, CalibStereo
 from wheels import Wheels
 from status_control import MotionStatus
-
-
-class SerialRobot:
-    def __init__(
-        self,
-        com_port='COM0',
-        baud_rate=115200,
-        parity_check=serial.PARITY_NONE,
-        stop_bits=1,
-        byte_size=serial.EIGHTBITS,
-        timeout=0.2,
-        receiver_callbacks=[],
-    ):
-        self.port = com_port
-        self.baud_rate = baud_rate
-        self.parity_check = parity_check
-        self.stop_bits = stop_bits
-        self.byte_size = byte_size
-        self.timeout = timeout
-        self.receiver_thread = None
-        self.receiver_buffer = ''
-        self.my_serial = None
-        self.receiver_callbacks = receiver_callbacks
-
-    def SetReceiverCallBack(self, call_backs):
-        self.receiver_callbacks = call_backs
-        return
-
-    def IsOpen(self):
-        if self.my_serial == None:
-            return False
-        else:
-            return self.my_serial.isOpen()
-
-    def _thread_receive(self):
-        while True:
-            read = self.my_serial.readall()
-            if len(read) > 0:
-                self.receiver_buffer = str(bytes(read).decode('utf-8', "ignore"))
-                for func in self.receiver_callbacks:
-                    func(self.receiver_buffer)
-                print(self.receiver_buffer, ' ', self.receiver_callbacks)
-
-    def Open(self):
-        self.my_serial = serial.Serial(port=self.port,
-                                       baudrate=self.baud_rate,
-                                       parity=self.parity_check,
-                                       timeout=self.timeout,
-                                       stopbits=self.stop_bits,
-                                       bytesize=self.byte_size)
-        self.receiver_thread = threading.Thread(target=self._thread_receive)
-        self.receiver_thread.start()
-        # self.receiver_callback('Open OK')
-
-    def Send(self, buffer):
-        status_ = self.my_serial.isOpen()
-        if status_ == True:
-            print('DEBUG BUFFER SEND: ', buffer.encode('ascii'))
-            self.my_serial.write(buffer.encode('ascii'))
-        else:
-            print('ERROR IN SERIAL SEND! SERIAL IS NOT OPEN\n')
-
-    def _async_raise(self, tid, exctype):
-        """raises the exception, performs cleanup if needed"""
-        tid = ctypes.c_long(tid)
-        if not inspect.isclass(exctype):
-            exctype = type(exctype)
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
-        if res == 0:
-            raise ValueError("invalid thread id")
-        elif res != 1:
-            # """if it returns a number greater than one, you're in trouble,
-            # and you should call it again with exc=NULL to revert the effect"""
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
-            raise SystemError("PyThreadState_SetAsyncExc failed")
-
-    def Close(self):
-        self.my_serial.close()
-        self._async_raise(self.receiver_thread.ident, SystemExit)
-
+from robo_serial import RoboSerial
 
 class TuningGUI:
     def __init__(self):
@@ -112,6 +33,7 @@ class TuningGUI:
 
         # *************************** app run var *********************
         self.my_serial = None
+        self.my_serial_prefer = base_script.serial_prefer
         self.command_send_buffer = ''
         # single camera \ stereo_camera \ single_track \ stereo_left_track \ stereo_3d_track
         self.cam_mode = ['SingleCam', 'Stereo', '1_Track', '1_L_Track', '3DTrack']
@@ -612,19 +534,21 @@ class TuningGUI:
         self.var_check_bit = self.combo1.get()
         self.var_bit_wide = int(self.combo2.get())
         self.var_serial_no = self.combo3.get()
+        if len(self.my_serial_prefer) > 0:
+            self.var_serial_no = self.my_serial_prefer 
         if self.var_check_bit == 'NONE':
             self.var_check_bit = serial.PARITY_NONE
 
         print('self.var_baud_rate:', self.var_baud_rate, '\nself.var_stop_bit:', self.var_stop_bit,
               '\nself.var_check_bit:', self.var_check_bit, '\nself.var_bit_wide:', self.var_bit_wide,
               '\nself.var_serial_no:', self.var_serial_no)
-        self.my_serial = SerialRobot(com_port=self.var_serial_no,
-                                     baud_rate=self.var_baud_rate,
-                                     parity_check=self.var_check_bit,
-                                     stop_bits=self.var_stop_bit,
-                                     byte_size=self.var_bit_wide,
-                                     timeout=0.3,
-                                     receiver_callbacks=[self._receiver_callback])
+        self.my_serial = RoboSerial(com_port=self.var_serial_no,
+                                    baud_rate=self.var_baud_rate,
+                                    parity_check=self.var_check_bit,
+                                    stop_bits=self.var_stop_bit,
+                                    byte_size=self.var_bit_wide,
+                                    timeout=0.3,
+                                    receiver_callbacks=[self._receiver_callback])
         self.my_serial.Open()
         self._robot_init()
 
