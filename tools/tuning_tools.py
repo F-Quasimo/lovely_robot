@@ -33,7 +33,7 @@ class TuningGUI:
 
         # *************************** app run var *********************
         self.my_serial = None
-        self.my_serial_prefer = base_script.serial_prefer
+        self.my_serial_prefer = base_config.serial_prefer
         self.command_send_buffer = ''
         # single camera \ stereo_camera \ single_track \ stereo_left_track \ stereo_3d_track
         self.cam_mode = ['SingleCam', 'Stereo', '1_Track', '1_L_Track', '3DTrack']
@@ -53,10 +53,10 @@ class TuningGUI:
         self.cap_tar_snap = False
         self.cap_curr_snapped = False
         self.cap_tar_snapped = False
-        self.cam_mode_single_cam_id = base_script.cam_mode_single_cam_id
-        self.cam_mode_stereo_cam_id = base_script.cam_mode_stereo_cam_id
-        self.cam_mode_stereo_cam_size = base_script.cam_mode_stereo_cam_size
-        self.cam_open_mode = base_script.cam_open_mode
+        self.cam_mode_single_cam_id = base_config.cam_mode_single_cam_id
+        self.cam_mode_stereo_cam_id = base_config.cam_mode_stereo_cam_id
+        self.cam_mode_stereo_cam_size = base_config.cam_mode_stereo_cam_size
+        self.cam_open_mode = base_config.cam_open_mode
 
         # **** Read Calib single camera
         fs_read_calib = cv2.FileStorage(base_config.calib_path, cv2.FileStorage_READ)

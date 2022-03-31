@@ -42,15 +42,18 @@ class BaseScript:
     init_set_power_on_release = '#000PCSM!#001PCSM!#002PCSM!#003PCSM!#004PCSM!#005PCSM!'
     init_set_steering_mode = '#000PMOD1!#001PMOD3!#002PMOD1!#003PMOD1!#004PMOD1!#005PMOD3!'
 
+    
+
+
+
+class BaseConfig:
+    calib_path = './fascinating_calib_stereo/calib_stereo.xml'
+    server_ip = '192.168.43.163'
     cam_mode_single_cam_id = 0
     cam_mode_stereo_cam_id = (0, 2)
     cam_mode_stereo_cam_size = (1920, 1080)
     cam_open_mode = cv2.CAP_DSHOW
     serial_prefer = '/dev/ttyS0'
-
-
-class BaseConfig:
-    calib_path = './fascinating_calib_stereo/calib_stereo.xml'
 
 
 base_script = BaseScript()

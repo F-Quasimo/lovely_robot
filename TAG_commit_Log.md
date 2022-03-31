@@ -1,4 +1,12 @@
 
+commit c844355d1097f24b38c46ae9d2f4dc85a1d05bc0 (HEAD -> main)
+Author: notebook <frankensteinquasimo@outlook.com>
+Date:   Thu Mar 31 19:03:27 2022 +0800
+    add server agency
+describe:
+    add server_agency. because raspberry's cpu is so slow
+
+
 commit 305bc12f9e586cdad713be921f637a0f1806a8d2 (HEAD -> main)
 Author: notebook <frankensteinquasimo@outlook.com>
 Date:   Sun Mar 27 04:27:19 2022 +0800
