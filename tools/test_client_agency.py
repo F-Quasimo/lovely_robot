@@ -11,7 +11,7 @@ from camera_mode import SingleCam
 if __name__ == "__main__":
     capture = SingleCam(base_config.cam_mode_single_cam_id)
     capture.OpenCam()
-    robo_client = RoboClient(host='192.168.43.163', port=8888)
+    robo_client = RoboClient(host=base_config.server_ip, port=8888)
     frame_count = 0
     while True:
         frame=capture.SnapShoot()

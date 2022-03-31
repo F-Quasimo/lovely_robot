@@ -134,5 +134,5 @@ class RoboClient:
 
 
 if __name__ == '__main__':
-    server_main = RoboServer(host='192.168.43.163', port=8888)
+    server_main = RoboServer(host='0.0.0.0', port=8888)
     server_main.Run()
