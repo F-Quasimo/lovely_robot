@@ -4,14 +4,18 @@ import cv2
 import numpy as np
 import platform
 import threading
+import time
 
 
 class SingleCam:
-    def __init__(self, cam_id=0, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW):
+    def __init__(self, cam_id=0, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW, cam_fps=30, exposure=-6, bright=0):
         self.cam_id = cam_id
         self.cap = None
         self.cam_size = cam_size
         self.cap_open_mode = cam_mode
+        self.cam_fps = cam_fps
+        self.exposure = exposure
+        self.bright = bright
 
         self.frame_buffer = [None, None]
         self.frame_idx = 0
@@ -22,16 +26,22 @@ class SingleCam:
         while self.thread_alive:
             ret, snap = self.cap.read()
             self.frame_buffer[self.frame_idx] = snap
-            self.frame_idx = (self.frame_idx + 1)%2
-
+            self.frame_idx = (self.frame_idx + 1) % 2
+            print('DEBUG FPS: ', self.cap.get(cv2.CAP_PROP_FPS), ' exp ', self.cap.get(cv2.CAP_PROP_EXPOSURE),
+                  'frame_size: ', self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), ' ', self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 
     def OpenCam(self):
         self.Close()
         self.cap = cv2.VideoCapture(self.cam_id + self.cap_open_mode)
         self.cap.open(self.cam_id)
-        self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.cam_size[0])
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.cam_size[1])
+        self.cap.set(cv2.CAP_PROP_FPS, self.cam_fps)
+        #self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE,1)
+        # self.cap.set(cv2.CAP_PROP_EXPOSURE,-4)
+        self.cap.set(cv2.CAP_PROP_BRIGHTNESS, self.bright)
+        self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
         print('DEBUG SingleCam OpenCam')
         if self.cap.isOpened():
             self.thread_alive = True
@@ -45,9 +55,9 @@ class SingleCam:
 
     def SnapShoot(self):
         if self.thread_alive:
-            snap = self.frame_buffer[(self.frame_idx+1)%2]
+            snap = self.frame_buffer[(self.frame_idx + 1) % 2]
             while snap is None:
-                snap = self.frame_buffer[(self.frame_idx+1)%2]
+                snap = self.frame_buffer[(self.frame_idx + 1) % 2]
             return snap
         else:
             return None
@@ -62,13 +72,23 @@ class SingleCam:
 
 
 class StereoCam:
-    def __init__(self, cam_id0, cam_id1, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW):
+    def __init__(self,
+                 cam_id0,
+                 cam_id1,
+                 cam_size=(1920, 1080),
+                 cam_mode=cv2.CAP_DSHOW,
+                 cam_fps=30,
+                 exposure=-6,
+                 bright=0):
         self.cam_id0 = cam_id0
         self.cam_id1 = cam_id1
         self.cap0 = None
         self.cap1 = None
         self.cam_size = cam_size
         self.cap_open_mode = cam_mode
+        self.cam_fps = cam_fps
+        self.exposure = exposure
+        self.bright = bright
 
         self.frame_buffer = [None, None, None, None]
         self.frame_idx = 0
@@ -80,21 +100,34 @@ class StereoCam:
             ret, snap0 = self.cap0.read()
             ret, snap1 = self.cap1.read()
             self.frame_buffer[self.frame_idx] = snap0
-            self.frame_buffer[self.frame_idx+1] = snap1
+            self.frame_buffer[self.frame_idx + 1] = snap1
             self.frame_idx = (self.frame_idx + 2) % 4
+            print('DEBUG FPS: ',
+                  self.cap0.get(cv2.CAP_PROP_FPS), ' brigh ', self.cap0.get(cv2.CAP_PROP_BRIGHTNESS), ' exp ',
+                  self.cap0.get(cv2.CAP_PROP_EXPOSURE), 'frame_size: ', self.cap0.get(cv2.CAP_PROP_FRAME_HEIGHT), ' ',
+                  self.cap0.get(cv2.CAP_PROP_FRAME_WIDTH), 'DEBUG2 FPS: ', self.cap1.get(cv2.CAP_PROP_FPS), ' brigh ',
+                  self.cap1.get(cv2.CAP_PROP_BRIGHTNESS), ' exp ', self.cap1.get(cv2.CAP_PROP_EXPOSURE), 'frame_size: ',
+                  self.cap1.get(cv2.CAP_PROP_FRAME_HEIGHT), ' ', self.cap1.get(cv2.CAP_PROP_FRAME_WIDTH), ' iso ',
+                  self.cap1.get(cv2.CAP_PROP_ISO_SPEED))
 
     def OpenCam(self):
         self.Close()
         self.cap0 = cv2.VideoCapture(self.cam_id0 + self.cap_open_mode)
         self.cap0.open(self.cam_id0)
-        self.cap0.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
+        self.cap0.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         self.cap0.set(cv2.CAP_PROP_FRAME_WIDTH, self.cam_size[0])
         self.cap0.set(cv2.CAP_PROP_FRAME_HEIGHT, self.cam_size[1])
+        self.cap0.set(cv2.CAP_PROP_BRIGHTNESS, self.bright)
+        self.cap0.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        self.cap0.set(cv2.CAP_PROP_FPS, self.cam_fps)
         self.cap1 = cv2.VideoCapture(self.cam_id1 + self.cap_open_mode)
         self.cap1.open(self.cam_id1)
-        self.cap1.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
+        self.cap1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         self.cap1.set(cv2.CAP_PROP_FRAME_WIDTH, self.cam_size[0])
         self.cap1.set(cv2.CAP_PROP_FRAME_HEIGHT, self.cam_size[1])
+        self.cap1.set(cv2.CAP_PROP_BRIGHTNESS, self.bright)
+        self.cap1.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        self.cap1.set(cv2.CAP_PROP_FPS, self.cam_fps)
         if self.cap0.isOpened() and self.cap1.isOpened():
             self.thread_alive = True
             self.videocap_thread = threading.Thread(target=self._thread_cam)
@@ -126,35 +159,43 @@ class StereoCam:
                 self.cap1.release()
                 self.cap1 = None
 
-if __name__ == '__main__':
 
-    sigcam = SingleCam(cam_id=0)
+if __name__ == '__main__':
+    '''
+    sigcam = SingleCam(cam_id=2, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW, cam_fps=60)
     sigcam.OpenCam()
     while True:
         if not sigcam.cap.isOpened():
             cv2.waitKey(3)
             print('wait...\n')
             continue
-        snap0=sigcam.SnapShoot()
+        snap0 = sigcam.SnapShoot()
         if snap0 is None:
             print('NONE OF IMG')
             continue
-        snap0=cv2.resize(snap0, (512,288))
+        snap0 = cv2.resize(snap0, (512, 288))
         cv2.imshow('snap0', snap0)
+        cv2.waitKey(1)
         #cv2.imwrite('/home/pi/github/save.jpg', snap0)
     '''
-    stereo_cam = StereoCam(cam_id0=2, cam_id1=0)
+    stereo_cam = StereoCam(cam_id0=2,
+                           cam_id1=0,
+                           cam_size=(640, 360),
+                           cam_mode=cv2.CAP_DSHOW,
+                           cam_fps=60,
+                           bright=0,
+                           exposure=-4)
     stereo_cam.OpenCam()
     while True:
         if not stereo_cam.cap1.isOpened():
             cv2.waitKey(3)
             print('wait...\n')
             continue
-        snap0, snap1=stereo_cam.SnapShoot()
-        snap0=cv2.resize(snap0, (512,288))
-        snap1=cv2.resize(snap1, (512,288))
+        snap0, snap1 = stereo_cam.SnapShoot()
+        snap0 = cv2.resize(snap0, (512, 288))
+        snap1 = cv2.resize(snap1, (512, 288))
         cv2.imshow('snap0', snap0)
         cv2.imshow('snap1', snap1)
-        cv2.imwrite('/home/pi/github/save00.jpg', snap0)
-        cv2.imwrite('/home/pi/github/save01.jpg', snap1)
-    '''
+        cv2.waitKey(1)
+        # cv2.imwrite('/home/pi/github/save00.jpg', snap0)
+        # cv2.imwrite('/home/pi/github/save01.jpg', snap1)
