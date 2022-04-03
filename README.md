@@ -5,9 +5,10 @@ A Robot; YOLOX run on raspberry PI; object detection; object tracking; stereo ma
 
 | robot  | YOLOX running on raspberry PI  |
 | ----  | ---- |
-| <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" /> |  <img src="./pic_img/yolox_s_xinbaodao_hd.gif" width = "484" height = "272" alt="my_robot" />  |
-| <img src="./pic_img/system_design.png" width = "200" height = "272" alt="my_robot" /> |  <img src="./pic_img/caixukun.gif" width = "484" height = "272" alt="my_robot" />  |
-| **Master tracking is Coming** | **Stereo-Matching-3D-reconstruction is coming** |
+| <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" title="my_robot" /> |  <img src="./pic_img/yolox_s_xinbaodao_hd.gif" width = "484" height = "272" alt="xinabodao" title="xinabodao" />  |
+| <img src="./pic_img/system_design.png" width = "200" height = "272" alt="doc_design" title="doc_design" /> |  <img src="./pic_img/caixukun.gif" width = "484" height = "272" alt="caixukun" title="caixukun" />  |
+| **Stereo 3D Reconstruction** | <img src="./pic_img/sgbm_stereo.gif" width = "484" height = "272" alt="stereo_3d" title="stereo_3d" /> |
+| **Stereo-Matching-3D-reconstruction is coming** | **Stereo-Matching-3D-reconstruction is coming** |
 
 
 ## introduce
