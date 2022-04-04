@@ -3,6 +3,7 @@ import os
 import cv2
 import numpy as np
 import open3d as o3d
+from nn_model.GMA.evaluate_single import GmaFlow
 
 
 class Stereo3D:
@@ -96,24 +97,27 @@ class Stereo3D:
             cv2.imwrite(os.path.join('./', 'combine_' + str('test') + '.jpg'), combine)
         return
 
-    def StereoMatching(self, write_down=False):
-        window_size = 11
-        stereo = cv2.StereoSGBM_create(
-            minDisparity=0,
-            numDisparities=240,  # max_disp has to be dividable by 16 f. E. HH 192, 256
-            blockSize=7,
-            P1=1 * 3 * window_size**2,
-            # wsize default 3; 5; 7 for SGBM reduced size image; 15 for SGBM full size image (1300px and above); 5 Works nicely
-            P2=32 * 3 * window_size**2,
-            disp12MaxDiff=5,
-            uniquenessRatio=15,
-            speckleWindowSize=200,
-            speckleRange=2,
-            preFilterCap=63,
-            mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY)
-        disparity = stereo.compute(self.mapped_img0, self.mapped_img1).astype(np.float32) / 16.0
-        self.disparity = disparity
-
+    def StereoMatching(self, write_down=False, method='sgbm'):
+        if method == 'sgbm':
+            window_size = 11
+            stereo = cv2.StereoSGBM_create(
+                minDisparity=0,
+                numDisparities=240,  # max_disp has to be dividable by 16 f. E. HH 192, 256
+                blockSize=7,
+                P1=1 * 3 * window_size**2,
+                # wsize default 3; 5; 7 for SGBM reduced size image; 15 for SGBM full size image (1300px and above); 5 Works nicely
+                P2=32 * 3 * window_size**2,
+                disp12MaxDiff=5,
+                uniquenessRatio=15,
+                speckleWindowSize=200,
+                speckleRange=2,
+                preFilterCap=63,
+                mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY)
+            disparity = stereo.compute(self.mapped_img0, self.mapped_img1).astype(np.float32) / 16.0
+            self.disparity = disparity
+        elif method == 'GMA':
+            optical_flow = GmaFlow(img0=self.mapped_img0, img1=self.mapped_img1, iters=5)
+            self.disparity = optical_flow[:, :, 0] * -1
         # flow
         # optical_flow_gen = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
         # tar_8u = cv2.cvtColor(self.mapped_img0, cv2.COLOR_BGR2GRAY)
@@ -151,5 +155,5 @@ if __name__ == '__main__':
     img0 = cv2.imread('./stereo_test/p_main_0000.jpg')
     img1 = cv2.imread('./stereo_test/p_aux_0000.jpg')
     stereo_3d.Rectify(img0=img0, img1=img1, write_down=False)
-    stereo_3d.StereoMatching(write_down=False)
+    stereo_3d.StereoMatching(write_down=False, method='sgbm')
     stereo_3d.ReProjection(write_down=True)

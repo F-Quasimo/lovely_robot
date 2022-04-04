@@ -7,7 +7,8 @@ A Robot; YOLOX run on raspberry PI; object detection; object tracking; stereo ma
 | ----  | ---- |
 | <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" title="my_robot" /> |  <img src="./pic_img/yolox_s_xinbaodao_hd.gif" width = "484" height = "272" alt="xinabodao" title="xinabodao" />  |
 | <img src="./pic_img/system_design.png" width = "200" height = "272" alt="doc_design" title="doc_design" /> |  <img src="./pic_img/caixukun.gif" width = "484" height = "272" alt="caixukun" title="caixukun" />  |
-| **Stereo 3D Reconstruction** | <img src="./pic_img/sgbm_stereo.gif" width = "484" height = "272" alt="stereo_3d" title="stereo_3d" /> |
+| **SGBM Stereo** | <img src="./pic_img/sgbm_stereo.gif" width = "484" height = "272" alt="sgbm_stereo_3d" title="sgbm_stereo_3d" /> |
+| **NN Stereo 3D** | <img src="./pic_img/flow_stereo.gif" width = "484" height = "272" alt="flow_stereo_3d" title="flow_stereo_3d" /> |
 | **Master tracking  is Coming** | **Master tracking is Coming** |
 
 
@@ -50,3 +51,7 @@ calibration is part of the tuning tools. as you can see, on the left-bottom of t
 
 ### how to use Serial tuning tools?
 ~~the GUI design file(visio) was put at doc/tuning_tools.* what each button work just follow its name. One more thing: config_scripts.py define some action about steering and capture. i use opencv VideoCapture for grap frame from camera. so GUI tuning is also used for tuning image processing. camera id is defined by cam_mode_single_cam_id if you use only one camera; cam_mode_stereo_cam_id if you use 2 cameras.you can acquire video stream from camera by mouse left click 'CapTar' 'CapCur' individually and mouse right click for grap a snapshoot then do something interesting (replace the "DoNothing" function defined in config_fasci.py)~~
+
+### Reference
+https://github.com/zacjiang/GMA  
+https://github.com/Megvii-BaseDetection/YOLOX  
