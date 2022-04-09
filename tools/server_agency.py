@@ -8,11 +8,15 @@ import subprocess
 import numpy as np
 import cv2
 import sys
+from stereo_3d import Stereo3D
+
 
 class RoboServer:
     def __init__(self, host='0.0.0.0', port=8888):
-        self.socket_listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket_listener = socket.socket(
+            socket.AF_INET, socket.SOCK_STREAM)
+        self.socket_listener.setsockopt(
+            socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket_listener.bind((host, port))
         self.socket_listener.listen(5)
         self.connected_pool = {}
@@ -21,7 +25,8 @@ class RoboServer:
     def accept_thred(self):
         while True:
             client, address = self.socket_listener.accept()
-            thread_handel = Thread(target=self.receiver_handle, args=(client, address))
+            thread_handel = Thread(
+                target=self.receiver_handle, args=(client, address))
             thread_handel.setDaemon(self)
             thread_handel.start()
 
@@ -107,18 +112,23 @@ class RoboClient:
 
     def _thread_sender(self, data_head, data_in):
         print('Client thread_sender data_head', data_head)
-        data_head_str = data_head['data_len'].ljust(16) + data_head['data_idx'].ljust(16)
-        self.skt_sender.send(str.encode(data_head_str).ljust(self.data_head_len))
+        data_head_str = data_head['data_len'].ljust(
+            16) + data_head['data_idx'].ljust(16)
+        self.skt_sender.send(str.encode(
+            data_head_str).ljust(self.data_head_len))
         self.skt_sender.send(data_in)
         receive = self.skt_sender.recv(1024)
         self.data_return.append([data_head['data_idx'], receive.decode()])
 
     def Send(self, frame, frame_idx=0):
-        result, imgencode = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 15])
+        result, imgencode = cv2.imencode(
+            '.png', frame, [int(cv2.IMWRITE_PNG_COMPRESSION), 4])
         encode_data = np.array(imgencode)
         str_data = encode_data.tostring()
-        data_head = {'data_len': str(len(str_data)), 'data_idx': str(frame_idx)}
-        thread_sender = Thread(target=self._thread_sender, args=(data_head, str_data))
+        data_head = {'data_len': str(
+            len(str_data)), 'data_idx': str(frame_idx)}
+        thread_sender = Thread(target=self._thread_sender,
+                               args=(data_head, str_data))
         thread_sender.start()
 
     def Recv(self, frame_idx):

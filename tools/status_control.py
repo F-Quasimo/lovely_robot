@@ -170,6 +170,15 @@ class MotionStatus:
             return self.joint_0.GetRunAngleCommand(angle=self.joint_0_diverge_angle,
                                                    current=self.joint_0_position,
                                                    time_t=time_t)[0]
+    def JointYawUp(self, delta_x, time_t=1000):
+        self.joint_0_diverge_angle = self.joint_0_diverge_angle - delta_x
+        if self.joint_0_diverge_angle > self.joint_0.roll_range / 2:
+            self.joint_0_diverge_angle = self.joint_0.roll_range / 2
+        if self.joint_0_diverge_angle < self.joint_0.roll_range / -2:
+            self.joint_0_diverge_angle = self.joint_0.roll_range / -2
+        return self.joint_0.GetRunAngleCommand(angle=self.joint_0_diverge_angle,
+                                                current=self.joint_0_position,
+                                                time_t=time_t)[0]
 
     def StandUp(self, delta_x, time_t=1000):
         joint1_tmp = self.joint_1_diverge_angle - delta_x

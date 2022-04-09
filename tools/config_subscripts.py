@@ -49,11 +49,28 @@ class BaseScript:
 class BaseConfig:
     calib_path = './fascinating_calib_stereo/calib_stereo.xml'
     server_ip = '192.168.50.246'
-    cam_mode_single_cam_id = 0
-    cam_mode_stereo_cam_id = (0, 2)
+    cam_mode_single_cam_id =0
+    cam_mode_stereo_cam_id = (6, 4)
     cam_mode_stereo_cam_size = (1920, 1080)
     cam_open_mode = cv2.CAP_DSHOW
-    serial_prefer = '/dev/ttyS0'
+    cam_fps=30
+    bright=0
+    exposure=500
+
+    serial_prefer = ''
+    if platform.machine()=='aarch64':
+        # my raspberry: aarch64
+        serial_prefer = '/dev/ttyS0'
+        cam_mode_stereo_cam_id = (1, 0)
+        cam_fps=30
+        bright=0
+        exposure=500
+    elif platform.machine()=='x86_64':
+        serial_prefer=''
+        cam_mode_stereo_cam_id = (6, 4)
+        cam_fps=30
+        bright=0
+        exposure=500
 
 
 base_script = BaseScript()

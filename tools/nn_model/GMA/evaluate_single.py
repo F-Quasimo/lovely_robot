@@ -96,24 +96,24 @@ def demo(args):
 
             viz(image1, flow_up, flow_dir, flow_name)
 
-def GmaFlow(img0, img1, iters=12, ckpt=os.path.join(exp_dir,'checkpoints/gma-sintel.pth')):
-    model = torch.nn.DataParallel(RAFTGMA(args))
-    model.load_state_dict(torch.load(ckpt, map_location=torch.device('cpu')))
-    print(f"Loaded checkpoint at {args.model}")
+class GmaFlow:
+    def __init__(self, ckpt=os.path.join(exp_dir,'checkpoints/gma-sintel.pth')):
+        self.ckpt=ckpt
+        self.model = torch.nn.DataParallel(RAFTGMA(args))
+        self.model.load_state_dict(torch.load(ckpt, map_location=torch.device('cpu')))
+        self.model = self.model.module
+        self.model.to(DEVICE)
+        self.model.eval()
 
-    model = model.module
-    model.to(DEVICE)
-    model.eval()
-    image1 = load_image_from_np(img0)
-    image2 = load_image_from_np(img1)
-    padder = InputPadder(image1.shape)
-    image1, image2 = padder.pad(image1, image2)
-
-    flow_low, flow_up = model(image1, image2, iters=iters, test_mode=True)
-    print(f"Estimating optical flow...")
-    flow_low = flow_low[0].permute(1, 2, 0).cpu().detach().numpy()
-    flow_up = flow_up[0].permute(1, 2, 0).cpu().detach().numpy()
-    return flow_up[0:img0.shape[0],0:img0.shape[1]]
+    def Run(self, img0, img1, iters=12):
+        image1 = load_image_from_np(img0)
+        image2 = load_image_from_np(img1)
+        padder = InputPadder(image1.shape)
+        image1, image2 = padder.pad(image1, image2)
+        flow_low, flow_up = self.model(image1, image2, iters=iters, test_mode=True)
+        flow_low = flow_low[0].permute(1, 2, 0).cpu().detach().numpy()
+        flow_up = flow_up[0].permute(1, 2, 0).cpu().detach().numpy()
+        return flow_up[0:img0.shape[0],0:img0.shape[1]]
 
 
 if __name__ == '__main__':

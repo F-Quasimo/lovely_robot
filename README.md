@@ -6,7 +6,7 @@ A Robot; YOLOX run on raspberry PI; object detection; object tracking; stereo ma
 | robot  | YOLOX running on raspberry PI  |
 | ----  | ---- |
 | <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" title="my_robot" /> |  <img src="./pic_img/caixukun.gif" width = "484" height = "272" alt="caixukun" title="caixukun" /> |
-| <img src="./pic_img/system_design.png" width = "200" height = "272" alt="doc_design" title="doc_design" /> |  <img src="./pic_img/flow_stereo.jpg" width = "484" height = "272" alt="flow_stereo_3d" title="flow_stereo_3d" />  |
+| <img src="./pic_img/system_design.png" width = "200" height = "272" alt="doc_design" title="doc_design" /> |  <img src="./pic_img/flow_stereo2.png" width = "484" height = "272" alt="flow_stereo_3d" title="flow_stereo_3d" />  |
 | **SGBM Stereo** | <img src="./pic_img/sgbm_stereo.gif" width = "484" height = "272" alt="sgbm_stereo_3d" title="sgbm_stereo_3d" /> |
 | **Master tracking  is Coming** | **Master tracking is Coming** |
 

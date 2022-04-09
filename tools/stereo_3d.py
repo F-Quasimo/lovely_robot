@@ -4,10 +4,11 @@ import cv2
 import numpy as np
 import open3d as o3d
 from nn_model.GMA.evaluate_single import GmaFlow
+import time
 
 
 class Stereo3D:
-    def __init__(self, calib_file_path, **kwargs):
+    def __init__(self, calib_file_path, actual_img_size=None, **kwargs):
         self.camera_matrix_0 = None
         self.dist_coeffs_0 = None
         self.optimal_matrix_0 = None
@@ -38,13 +39,22 @@ class Stereo3D:
         self.cam1_mapy = None
 
         def _load_calib_data():
-            calib_file_fs = cv2.FileStorage(calib_file_path, cv2.FILE_STORAGE_READ)
-            self.camera_matrix_0 = calib_file_fs.getNode('cameraMatrix_0').mat()
+            import sys
+
+            print(sys.path[0])
+
+            calib_file_fs = cv2.FileStorage(
+                calib_file_path, cv2.FILE_STORAGE_READ)
+            self.camera_matrix_0 = calib_file_fs.getNode(
+                'cameraMatrix_0').mat()
             self.dist_coeffs_0 = calib_file_fs.getNode('distCoeffs_0').mat()
-            self.optimal_matrix_0 = calib_file_fs.getNode('optimal_matrix_0').mat()
-            self.camera_matrix_1 = calib_file_fs.getNode('cameraMatrix_1').mat()
+            self.optimal_matrix_0 = calib_file_fs.getNode(
+                'optimal_matrix_0').mat()
+            self.camera_matrix_1 = calib_file_fs.getNode(
+                'cameraMatrix_1').mat()
             self.dist_coeffs_1 = calib_file_fs.getNode('distCoeffs_1').mat()
-            self.optimal_matrix_1 = calib_file_fs.getNode('optimal_matrix_1').mat()
+            self.optimal_matrix_1 = calib_file_fs.getNode(
+                'optimal_matrix_1').mat()
 
             self.camera_matrix0 = calib_file_fs.getNode('cameraMatrix0').mat()
             self.dist_coeffs0 = calib_file_fs.getNode('distCoeffs0').mat()
@@ -65,6 +75,10 @@ class Stereo3D:
 
         _load_calib_data()
 
+        scales_k = -1
+        if actual_img_size is not None:
+            scales_k = actual_img_size[0]/self.image_size[0]
+
         self.cam0_mapx, self.cam0_mapy = cv2.initUndistortRectifyMap(cameraMatrix=self.camera_matrix0,
                                                                      distCoeffs=self.dist_coeffs0,
                                                                      R=self.cam0_rectify,
@@ -79,25 +93,43 @@ class Stereo3D:
                                                                      size=(int(self.image_size[0]),
                                                                            int(self.image_size[1])),
                                                                      m1type=cv2.CV_32FC1)
+        if scales_k > 0:
+            self.cam0_mapx = (cv2.resize(
+                self.cam0_mapx, dsize=actual_img_size)*scales_k).astype('float32')
+            self.cam0_mapy = (cv2.resize(
+                self.cam0_mapy, dsize=actual_img_size)*scales_k).astype('float32')
+            self.cam1_mapx = (cv2.resize(
+                self.cam1_mapx, dsize=actual_img_size)*scales_k).astype('float32')
+            self.cam1_mapy = (cv2.resize(
+                self.cam1_mapy, dsize=actual_img_size)*scales_k).astype('float32')
+            scales = np.zeros((3, 3), dtype='float32')
+            # scales[0,0] =
+            self.cam_Q_mat[:, 3] = self.cam_Q_mat[:, 3]*scales_k
+
         self.mapped_img0 = None
         self.mapped_img1 = None
         self.disparity = None
         self.flow = None
+        self.model = None
         self.img_3d = None
 
     def Rectify(self, img0, img1, write_down=False):
-        self.mapped_img0 = cv2.remap(img0, map1=self.cam0_mapx, map2=self.cam0_mapy, interpolation=cv2.INTER_AREA)
-        self.mapped_img1 = cv2.remap(img1, map1=self.cam1_mapx, map2=self.cam1_mapy, interpolation=cv2.INTER_AREA)
+        self.mapped_img0 = cv2.remap(
+            img0, map1=self.cam0_mapx, map2=self.cam0_mapy, interpolation=cv2.INTER_AREA)
+        self.mapped_img1 = cv2.remap(
+            img1, map1=self.cam1_mapx, map2=self.cam1_mapy, interpolation=cv2.INTER_AREA)
         if write_down:
             combine = np.hstack([self.mapped_img0, self.mapped_img1])
             for line_idx in range(20):
                 combine = cv2.line(combine, (0, int(self.image_size[1] / 20 * line_idx)),
-                                   (int(self.image_size[0] * 2), int(self.image_size[1] / 20 * line_idx)), (0, 0, 255),
+                                   (int(
+                                       self.image_size[0] * 2), int(self.image_size[1] / 20 * line_idx)), (0, 0, 255),
                                    2, cv2.LINE_4)
-            cv2.imwrite(os.path.join('./', 'combine_' + str('test') + '.jpg'), combine)
+            cv2.imwrite(os.path.join('./', 'combine_' +
+                        str('test') + '.jpg'), combine)
         return
 
-    def StereoMatching(self, write_down=False, method='sgbm'):
+    def StereoMatching(self, write_down=False, return_8u=False, method='sgbm', **kwargs):
         if method == 'sgbm':
             window_size = 11
             stereo = cv2.StereoSGBM_create(
@@ -113,10 +145,15 @@ class Stereo3D:
                 speckleRange=2,
                 preFilterCap=63,
                 mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY)
-            disparity = stereo.compute(self.mapped_img0, self.mapped_img1).astype(np.float32) / 16.0
+            disparity = stereo.compute(
+                self.mapped_img0, self.mapped_img1).astype(np.float32) / 16.0
             self.disparity = disparity
         elif method == 'GMA':
-            optical_flow = GmaFlow(img0=self.mapped_img0, img1=self.mapped_img1, iters=5)
+            if self.model == None:
+                self.model = GmaFlow()
+            optical_flow = self.model.Run(
+                img0=self.mapped_img0, img1=self.mapped_img1, iters=kwargs['iter'])
+            # print('kwargs[iter]',kwargs['iter'])
             self.disparity = optical_flow[:, :, 0] * -1
         # flow
         # optical_flow_gen = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
@@ -125,16 +162,23 @@ class Stereo3D:
         # optical_flow_0 = optical_flow_gen.calc(tar_8u, curr_8u, None)
         # flow = optical_flow_0.copy()
         # self.disparity = flow[:,:,0]*-1
-        if write_down:
-            disparity_u8 = None
-            disparity_u8 = cv2.normalize(src=self.disparity, dst=disparity_u8, norm_type=cv2.NORM_MINMAX)
-            disparity_u8 = (disparity_u8 * 255).astype(np.uint8)
-            cv2.imwrite(os.path.join('./', 'disp_' + str('test') + '.jpg'), disparity_u8)
+        disparity_u8 = None
+        if write_down or return_8u:
 
-        return
+            disparity_u8 = cv2.normalize(
+                src=self.disparity, dst=disparity_u8, norm_type=cv2.NORM_MINMAX)
+            disparity_u8 = (disparity_u8 * 255).astype(np.uint8)
+            if write_down:
+                cv2.imwrite(os.path.join('./', 'disp_' +
+                            str('test') + '.jpg'), disparity_u8)
+        if return_8u:
+            return disparity_u8
+        else:
+            return None
 
     def ReProjection(self, write_down=False):
-        _3d_image = cv2.reprojectImageTo3D(disparity=self.disparity, Q=self.cam_Q_mat, handleMissingValues=True)
+        _3d_image = cv2.reprojectImageTo3D(
+            disparity=self.disparity, Q=self.cam_Q_mat, handleMissingValues=True)
         xyz = _3d_image.reshape(-1, 3)
         xyz = xyz[xyz[:, 2] < 1000]
         xyz = xyz[xyz[:, 2] > -100]
@@ -151,9 +195,21 @@ class Stereo3D:
 
 
 if __name__ == '__main__':
-    stereo_3d = Stereo3D(calib_file_path='./calib_stereo/calib_stereo.xml')
+    # import sys
+    # import argparse
+    # import os
+    # sys.path.append('.')
+    actual_img_size = (640, 360)
+    stereo_3d = Stereo3D(
+        calib_file_path='calib_stereo/calib_stereo.xml', actual_img_size=actual_img_size)
     img0 = cv2.imread('./stereo_test/p_main_0000.jpg')
     img1 = cv2.imread('./stereo_test/p_aux_0000.jpg')
-    stereo_3d.Rectify(img0=img0, img1=img1, write_down=False)
-    stereo_3d.StereoMatching(write_down=False, method='sgbm')
+    img0 = cv2.resize(img0, actual_img_size)
+    img1 = cv2.resize(img1, actual_img_size)
+    stereo_3d.Rectify(img0=img0, img1=img1, write_down=True)
+    time_before = time.time()
+    dic = {'iter': 5}
+    stereo_3d.StereoMatching(write_down=True, method='GMA', **dic)
+    time_after = time.time()
+    print('Matching cost: ', time_after-time_before)
     stereo_3d.ReProjection(write_down=True)

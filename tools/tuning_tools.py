@@ -24,6 +24,7 @@ from wheels import Wheels
 from status_control import MotionStatus
 from robo_serial import RoboSerial
 
+
 class TuningGUI:
     def __init__(self):
         tk_tittle = 'tuning_tools'
@@ -36,7 +37,8 @@ class TuningGUI:
         self.my_serial_prefer = base_config.serial_prefer
         self.command_send_buffer = ''
         # single camera \ stereo_camera \ single_track \ stereo_left_track \ stereo_3d_track
-        self.cam_mode = ['SingleCam', 'Stereo', '1_Track', '1_L_Track', '3DTrack']
+        self.cam_mode = ['SingleCam', 'Stereo',
+                         '1_Track', '1_L_Track', '3DTrack']
         self.cam_mode_flag = 0
         self.cam_mode_thread = [None] * len(self.cam_mode)
         self.cam_mode_thread_flag = [False] * len(self.cam_mode)
@@ -45,8 +47,6 @@ class TuningGUI:
         self.thread_1_track_flag = 2
         self.thread_1_l_track_flag = 3
         self.thread_3d_track_flag = 4
-
-
 
         # click for grap video stream right click for snap
         self.cap_curr_snap = False
@@ -59,7 +59,8 @@ class TuningGUI:
         self.cam_open_mode = base_config.cam_open_mode
 
         # **** Read Calib single camera
-        fs_read_calib = cv2.FileStorage(base_config.calib_path, cv2.FileStorage_READ)
+        fs_read_calib = cv2.FileStorage(
+            base_config.calib_path, cv2.FileStorage_READ)
         self.camera_matrix = fs_read_calib.getNode('cameraMatrix_0').mat()
         self.optimal_matrix = fs_read_calib.getNode('optimal_matrix_0').mat()
         self.distortion = fs_read_calib.getNode('distCoeffs_0').mat()
@@ -70,8 +71,8 @@ class TuningGUI:
 
         # define foot
         self.foot = Wheels()
-        self.foot_base_speed=500
-        self.foot_base_time=20
+        self.foot_base_speed = 500
+        self.foot_base_time = 20
         self.motion_status = MotionStatus(self.foot)
         # ***** for calib
         # 0 for default ,
@@ -111,14 +112,21 @@ class TuningGUI:
         self.type_in = tk.PanedWindow(self.frame_main, orient=tk.VERTICAL)
 
         self.buttons_and_serial = tk.Frame(self.frame_main)
-        self.buttons = tk.PanedWindow(self.buttons_and_serial, orient=tk.VERTICAL)
-        self.serial_com = tk.PanedWindow(self.buttons_and_serial, orient=tk.VERTICAL)
+        self.buttons = tk.PanedWindow(
+            self.buttons_and_serial, orient=tk.VERTICAL)
+        self.serial_com = tk.PanedWindow(
+            self.buttons_and_serial, orient=tk.VERTICAL)
 
-        self.frame_1 = tk.LabelFrame(master=self.monitor, bg='#555555555', text='monitor')
-        self.frame_2 = tk.LabelFrame(master=self.euler_show, bg='#555555555', text='euler_show')
-        self.frame_3 = tk.LabelFrame(master=self.buttons, bg='#555555555', text='control')
-        self.frame_4 = tk.LabelFrame(master=self.type_in, bg='#555555555', text='input')
-        self.frame_5 = tk.LabelFrame(master=self.serial_com, bg='#555555555', text='serial')
+        self.frame_1 = tk.LabelFrame(
+            master=self.monitor, bg='#555555555', text='monitor')
+        self.frame_2 = tk.LabelFrame(
+            master=self.euler_show, bg='#555555555', text='euler_show')
+        self.frame_3 = tk.LabelFrame(
+            master=self.buttons, bg='#555555555', text='control')
+        self.frame_4 = tk.LabelFrame(
+            master=self.type_in, bg='#555555555', text='input')
+        self.frame_5 = tk.LabelFrame(
+            master=self.serial_com, bg='#555555555', text='serial')
 
         self.frame_2.pack(expand='YES')
 
@@ -165,7 +173,8 @@ class TuningGUI:
         self.np_curr = empty_img.copy().astype(np.uint8)
         self.image_curr = Image.fromarray(self.np_curr)
         self.monitor_curr_img = ImageTk.PhotoImage(self.image_curr)
-        self.monitor_curr = tk.Canvas(self.frame_1, bg='#345645323', width=self.pic_width, height=self.pic_height)
+        self.monitor_curr = tk.Canvas(
+            self.frame_1, bg='#345645323', width=self.pic_width, height=self.pic_height)
         self.monitor_curr = tk.Label(master=self.frame_1,
                                      image=self.monitor_curr_img,
                                      height=self.pic_height,
@@ -175,7 +184,8 @@ class TuningGUI:
         self.np_show = empty_img.copy().astype(np.uint8)
         self.image_show = Image.fromarray(self.np_show)
         self.monitor_show_img = ImageTk.PhotoImage(self.image_show)
-        self.monitor_show = tk.Canvas(self.frame_1, bg='#345645323', width=self.pic_width, height=self.pic_height)
+        self.monitor_show = tk.Canvas(
+            self.frame_1, bg='#345645323', width=self.pic_width, height=self.pic_height)
         self.monitor_show = tk.Label(master=self.frame_1,
                                      image=self.monitor_show_img,
                                      height=self.pic_height,
@@ -186,39 +196,66 @@ class TuningGUI:
         font_height = 2
         font_width = 34
         euler_show_padx = 4
-        self.pitch = tk.Label(self.frame_2, text='Pitch_x', height=font_height, width=font_width, bg='#000fff000')
-        self.pitch.grid(row=0, column=0, sticky=tk.NSEW, padx=euler_show_padx, pady=1, ipadx=1, ipady=1)
-        self.yaw = tk.Label(self.frame_2, text='Yaw_y', height=font_height, width=font_width, bg='#000fff000')
-        self.yaw.grid(row=0, column=1, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.roll = tk.Label(self.frame_2, text='Roll_z', height=font_height, width=font_width, bg='#000fff000')
-        self.roll.grid(row=0, column=2, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.shift_x = tk.Label(self.frame_2, text='Shift_x', height=font_height, width=font_width, bg='#000fff000')
-        self.shift_x.grid(row=0, column=3, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.shift_y = tk.Label(self.frame_2, text='Shift_y', height=font_height, width=font_width, bg='#000fff000')
-        self.shift_y.grid(row=0, column=4, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.shift_z = tk.Label(self.frame_2, text='Shift_z', height=font_height, width=font_width, bg='#000fff000')
-        self.shift_z.grid(row=0, column=5, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
+        self.pitch = tk.Label(self.frame_2, text='Pitch_x',
+                              height=font_height, width=font_width, bg='#000fff000')
+        self.pitch.grid(row=0, column=0, sticky=tk.NSEW,
+                        padx=euler_show_padx, pady=1, ipadx=1, ipady=1)
+        self.yaw = tk.Label(self.frame_2, text='Yaw_y',
+                            height=font_height, width=font_width, bg='#000fff000')
+        self.yaw.grid(row=0, column=1, sticky=tk.NSEW,
+                      padx=euler_show_padx, pady=1)
+        self.roll = tk.Label(self.frame_2, text='Roll_z',
+                             height=font_height, width=font_width, bg='#000fff000')
+        self.roll.grid(row=0, column=2, sticky=tk.NSEW,
+                       padx=euler_show_padx, pady=1)
+        self.shift_x = tk.Label(self.frame_2, text='Shift_x',
+                                height=font_height, width=font_width, bg='#000fff000')
+        self.shift_x.grid(row=0, column=3, sticky=tk.NSEW,
+                          padx=euler_show_padx, pady=1)
+        self.shift_y = tk.Label(self.frame_2, text='Shift_y',
+                                height=font_height, width=font_width, bg='#000fff000')
+        self.shift_y.grid(row=0, column=4, sticky=tk.NSEW,
+                          padx=euler_show_padx, pady=1)
+        self.shift_z = tk.Label(self.frame_2, text='Shift_z',
+                                height=font_height, width=font_width, bg='#000fff000')
+        self.shift_z.grid(row=0, column=5, sticky=tk.NSEW,
+                          padx=euler_show_padx, pady=1)
         # ------
         font_height_val = 2
-        self.pitch_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
-        self.pitch_val.grid(row=1, column=0, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.yaw_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
-        self.yaw_val.grid(row=1, column=1, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.roll_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
-        self.roll_val.grid(row=1, column=2, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.shift_x_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
-        self.shift_x_val.grid(row=1, column=3, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.shift_y_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
-        self.shift_y_val.grid(row=1, column=4, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
-        self.shift_z_val = tk.Label(self.frame_2, text='0.00', height=font_height_val)
-        self.shift_z_val.grid(row=1, column=5, sticky=tk.NSEW, padx=euler_show_padx, pady=1)
+        self.pitch_val = tk.Label(
+            self.frame_2, text='0.00', height=font_height_val)
+        self.pitch_val.grid(row=1, column=0, sticky=tk.NSEW,
+                            padx=euler_show_padx, pady=1)
+        self.yaw_val = tk.Label(
+            self.frame_2, text='0.00', height=font_height_val)
+        self.yaw_val.grid(row=1, column=1, sticky=tk.NSEW,
+                          padx=euler_show_padx, pady=1)
+        self.roll_val = tk.Label(
+            self.frame_2, text='0.00', height=font_height_val)
+        self.roll_val.grid(row=1, column=2, sticky=tk.NSEW,
+                           padx=euler_show_padx, pady=1)
+        self.shift_x_val = tk.Label(
+            self.frame_2, text='0.00', height=font_height_val)
+        self.shift_x_val.grid(row=1, column=3, sticky=tk.NSEW,
+                              padx=euler_show_padx, pady=1)
+        self.shift_y_val = tk.Label(
+            self.frame_2, text='0.00', height=font_height_val)
+        self.shift_y_val.grid(row=1, column=4, sticky=tk.NSEW,
+                              padx=euler_show_padx, pady=1)
+        self.shift_z_val = tk.Label(
+            self.frame_2, text='0.00', height=font_height_val)
+        self.shift_z_val.grid(row=1, column=5, sticky=tk.NSEW,
+                              padx=euler_show_padx, pady=1)
 
         # ******************* TYPE IN *********************
         self.json_label = tk.Label(self.frame_4, text='Json:', height=3)
-        path_default = tk.StringVar(value='/home/fq/lovely_robot/script/init_script.json')
-        self.json_path = tk.Entry(self.frame_4, font=('Arial', 16), width=55, textvariable=path_default)
+        path_default = tk.StringVar(
+            value='/home/fq/lovely_robot/script/init_script.json')
+        self.json_path = tk.Entry(self.frame_4, font=(
+            'Arial', 16), width=55, textvariable=path_default)
         self.send_label = tk.Label(self.frame_4, text='Send:', height=3)
-        self.send_command_entry = tk.Entry(self.frame_4, font=('Arial', 16), width=65)
+        self.send_command_entry = tk.Entry(
+            self.frame_4, font=('Arial', 16), width=65)
         self.json_label.pack(side=tk.LEFT, padx=3, pady=3)
         self.json_path.pack(side=tk.LEFT)
         self.send_label.pack(side=tk.LEFT, padx=3, pady=3)
@@ -231,188 +268,267 @@ class TuningGUI:
         button_pady = 7
         delta_move = 4
         delta_mini_move = 0.5
-        self.pitch_p_bt = tk.Button(self.frame_3, text='Pitch+^', font=button_font, width=button_w)
+        self.pitch_p_bt = tk.Button(
+            self.frame_3, text='Pitch+^', font=button_font, width=button_w)
         self.pitch_p_bt.bind('<Button-1>',
                              lambda event: self._send_command(self.motion_status.PitchUp(delta_x=delta_move, time_t=2000)))
         self.pitch_p_bt.bind(
             '<Button-3>',
             lambda event: self._send_command(self.motion_status.PitchUp(delta_x=delta_mini_move, time_t=2000)))
-        self.pitch_p_bt.grid(row=0, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.pitch_p_bt.grid(row=0, column=0, sticky=tk.NSEW,
+                             padx=button_padx, pady=button_pady)
 
-        self.yaw_p_bt = tk.Button(self.frame_3, text='Yaw+>', font=button_font, width=button_w)
+        self.yaw_p_bt = tk.Button(
+            self.frame_3, text='Yaw+>', font=button_font, width=button_w)
         self.yaw_p_bt.bind('<Button-1>',
-                           lambda event: self._send_command(self.motion_status.YawUp(delta_x=delta_move, time_t=2000)))
+                           lambda event: self._send_command(self.motion_status.JointYawUp(delta_x=delta_move, time_t=2000)))
         self.yaw_p_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.motion_status.YawUp(delta_x=delta_mini_move, time_t=2000)))
-        self.yaw_p_bt.grid(row=0, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+            lambda event: self._send_command(self.motion_status.JointYawUp(delta_x=delta_mini_move, time_t=2000)))
+        self.yaw_p_bt.grid(row=0, column=1, sticky=tk.NSEW,
+                           padx=button_padx, pady=button_pady)
 
-        self.roll_p_bt = tk.Button(self.frame_3, text='Roll+@', font=button_font, width=button_w)
+        self.roll_p_bt = tk.Button(
+            self.frame_3, text='Roll+@', font=button_font, width=button_w)
         self.roll_p_bt.bind('<Button-1>',
                             lambda event: self._send_command(self.motion_status.RollUp(delta_x=delta_move, time_t=2000)))
         self.roll_p_bt.bind(
             '<Button-3>',
             lambda event: self._send_command(self.motion_status.RollUp(delta_x=delta_mini_move, time_t=2000)))
-        self.roll_p_bt.grid(row=0, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.roll_p_bt.grid(row=0, column=2, sticky=tk.NSEW,
+                            padx=button_padx, pady=button_pady)
 
-        self.run_lf_bt = tk.Button(self.frame_3, text='LF', font=button_font, width=button_w)
+        self.run_lf_bt = tk.Button(
+            self.frame_3, text='LF', font=button_font, width=button_w)
         self.run_lf_bt.bind('<Button-1>', self._buttun_none)
-        self.run_lf_bt.grid(row=0, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_lf_bt.grid(row=0, column=3, sticky=tk.NSEW,
+                            padx=button_padx, pady=button_pady)
 
-        self.run_f_bt = tk.Button(self.frame_3, text='Forward ^', font=button_font, width=button_w)
+        self.run_f_bt = tk.Button(
+            self.frame_3, text='Forward ^', font=button_font, width=button_w)
         self.run_f_bt.bind(
             '<Button-1>',
             lambda event: self._send_command(self.foot.FrontTranslation(speed=self.foot_base_speed, time_run=self.foot_base_time)))
-        self.run_f_bt.grid(row=0, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_f_bt.grid(row=0, column=4, sticky=tk.NSEW,
+                           padx=button_padx, pady=button_pady)
 
-        self.run_rf_bt = tk.Button(self.frame_3, text='RF', font=button_font, width=button_w)
+        self.run_rf_bt = tk.Button(
+            self.frame_3, text='RF', font=button_font, width=button_w)
         self.run_rf_bt.bind('<Button-1>', self._buttun_none)
-        self.run_rf_bt.grid(row=0, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_rf_bt.grid(row=0, column=5, sticky=tk.NSEW,
+                            padx=button_padx, pady=button_pady)
 
-        self.cap_tar_bt = tk.Button(self.frame_3, text='CapTar', font=button_font, width=button_w)
+        self.cap_tar_bt = tk.Button(
+            self.frame_3, text='CapTar', font=button_font, width=button_w)
         self.cap_tar_bt.bind('<Button-1>', self._cap_tar_button_func)
         self.cap_tar_bt.bind('<Button-3>', self._cap_tar_button_right_func)
-        self.cap_tar_bt.grid(row=0, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.cap_tar_bt.grid(row=0, column=6, sticky=tk.NSEW,
+                             padx=button_padx, pady=button_pady)
 
-        self.pitch_m_bt = tk.Button(self.frame_3, text='Pitch-v', font=button_font, width=button_w)
+        self.pitch_m_bt = tk.Button(
+            self.frame_3, text='Pitch-v', font=button_font, width=button_w)
         self.pitch_m_bt.bind(
             '<Button-1>',
             lambda event: self._send_command(self.motion_status.PitchUp(delta_x=-1 * delta_move, time_t=2000)))
         self.pitch_m_bt.bind(
             '<Button-3>',
             lambda event: self._send_command(self.motion_status.PitchUp(delta_x=-1 * delta_mini_move, time_t=2000)))
-        self.pitch_m_bt.grid(row=1, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.pitch_m_bt.grid(row=1, column=0, sticky=tk.NSEW,
+                             padx=button_padx, pady=button_pady)
 
-        self.yaw_m_bt = tk.Button(self.frame_3, text='Yaw-<', font=button_font, width=button_w)
+        self.yaw_m_bt = tk.Button(
+            self.frame_3, text='Yaw-<', font=button_font, width=button_w)
         self.yaw_m_bt.bind('<Button-1>',
-                           lambda event: self._send_command(self.motion_status.YawUp(delta_x=-1 * delta_move, time_t=2000)))
+                           lambda event: self._send_command(self.motion_status.JointYawUp(delta_x=-1 * delta_move, time_t=2000)))
         self.yaw_m_bt.bind(
             '<Button-3>',
-            lambda event: self._send_command(self.motion_status.YawUp(delta_x=-1 * delta_mini_move, time_t=2000)))
-        self.yaw_m_bt.grid(row=1, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+            lambda event: self._send_command(self.motion_status.JointYawUp(delta_x=-1 * delta_mini_move, time_t=2000)))
+        self.yaw_m_bt.grid(row=1, column=1, sticky=tk.NSEW,
+                           padx=button_padx, pady=button_pady)
 
-        self.roll_m_bt = tk.Button(self.frame_3, text='Roll-G', font=button_font, width=button_w)
+        self.roll_m_bt = tk.Button(
+            self.frame_3, text='Roll-G', font=button_font, width=button_w)
         self.roll_m_bt.bind(
             '<Button-1>',
             lambda event: self._send_command(self.motion_status.RollUp(delta_x=-1 * delta_move, time_t=2000)))
         self.roll_m_bt.bind(
             '<Button-3>',
             lambda event: self._send_command(self.motion_status.RollUp(delta_x=-1 * delta_mini_move, time_t=2000)))
-        self.roll_m_bt.grid(row=1, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.roll_m_bt.grid(row=1, column=2, sticky=tk.NSEW,
+                            padx=button_padx, pady=button_pady)
 
-        self.run_left_bt = tk.Button(self.frame_3, text='Left <', font=button_font, width=button_w)
-        self.run_left_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.LeftTranslation(speed=self.foot_base_speed, time_run=self.foot_base_time)))
-        self.run_left_bt.grid(row=1, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_left_bt = tk.Button(
+            self.frame_3, text='Left <', font=button_font, width=button_w)
+        self.run_left_bt.bind('<Button-1>', lambda event: self._send_command(
+            self.foot.LeftTranslation(speed=self.foot_base_speed, time_run=self.foot_base_time)))
+        self.run_left_bt.grid(row=1, column=3, sticky=tk.NSEW,
+                              padx=button_padx, pady=button_pady)
 
-        self.run_pause_bt = tk.Button(self.frame_3, text='Run', font=button_font, width=button_w)
-        self.run_pause_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.FrontTranslation(speed=0, time_run=self.foot_base_time)))
-        self.run_pause_bt.grid(row=1, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_pause_bt = tk.Button(
+            self.frame_3, text='Run', font=button_font, width=button_w)
+        self.run_pause_bt.bind('<Button-1>', lambda event: self._send_command(
+            self.foot.FrontTranslation(speed=0, time_run=self.foot_base_time)))
+        self.run_pause_bt.grid(
+            row=1, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.run_right_bt = tk.Button(self.frame_3, text='Right >', font=button_font, width=button_w)
-        self.run_right_bt.bind('<Button-1>',lambda event: self._send_command(self.foot.LeftTranslation(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
-        self.run_right_bt.grid(row=1, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_right_bt = tk.Button(
+            self.frame_3, text='Right >', font=button_font, width=button_w)
+        self.run_right_bt.bind('<Button-1>', lambda event: self._send_command(
+            self.foot.LeftTranslation(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
+        self.run_right_bt.grid(
+            row=1, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.cap_curr_bt = tk.Button(self.frame_3, text='CapCurr', font=button_font, width=button_w)
+        self.cap_curr_bt = tk.Button(
+            self.frame_3, text='CapCurr', font=button_font, width=button_w)
         self.cap_curr_bt.bind('<Button-1>', self._cap_curr_button_func)
         self.cap_curr_bt.bind('<Button-3>', self._cap_curr_button_right_func)
-        self.cap_curr_bt.grid(row=1, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.cap_curr_bt.grid(row=1, column=6, sticky=tk.NSEW,
+                              padx=button_padx, pady=button_pady)
 
         # ******************* BUTTON ROW 2 *********************
-        self.stand_up_bt = tk.Button(self.frame_3, text='StandUp~', font=button_font, width=button_w)
+        self.stand_up_bt = tk.Button(
+            self.frame_3, text='StandUp~', font=button_font, width=button_w)
         self.stand_up_bt.bind('<Button-1>',
                               lambda event: self._send_command(self.motion_status.StandUp(delta_x=delta_move, time_t=2000)))
         self.stand_up_bt.bind(
             '<Button-3>',
             lambda event: self._send_command(self.motion_status.StandUp(delta_x=delta_mini_move, time_t=2000)))
-        self.stand_up_bt.grid(row=2, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.stand_up_bt.grid(row=2, column=0, sticky=tk.NSEW,
+                              padx=button_padx, pady=button_pady)
 
-        self.release_machine_bt = tk.Button(self.frame_3, text='Release', font=button_font, width=button_w)
-        self.release_machine_bt.bind('<Button-1>', lambda event: self._send_command(base_script.steering_release_mode))
-        self.release_machine_bt.grid(row=2, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.release_machine_bt = tk.Button(
+            self.frame_3, text='Release', font=button_font, width=button_w)
+        self.release_machine_bt.bind(
+            '<Button-1>', lambda event: self._send_command(base_script.steering_release_mode))
+        self.release_machine_bt.grid(
+            row=2, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.regain_bt = tk.Button(self.frame_3, text='Regain', font=button_font, width=button_w)
-        self.regain_bt.bind('<Button-1>', lambda event: self._send_command(base_script.steering_regain_mode))
-        self.regain_bt.grid(row=2, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.regain_bt = tk.Button(
+            self.frame_3, text='Regain', font=button_font, width=button_w)
+        self.regain_bt.bind(
+            '<Button-1>', lambda event: self._send_command(base_script.steering_regain_mode))
+        self.regain_bt.grid(row=2, column=2, sticky=tk.NSEW,
+                            padx=button_padx, pady=button_pady)
 
-        self.run_l_circle_bt = tk.Button(self.frame_3, text='L_Circle', font=button_font, width=button_w)
-        self.run_l_circle_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.TurnLeft(speed=self.foot_base_speed, time_run=self.foot_base_time)))
-        self.run_l_circle_bt.grid(row=2, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_l_circle_bt = tk.Button(
+            self.frame_3, text='L_Circle', font=button_font, width=button_w)
+        self.run_l_circle_bt.bind('<Button-1>', lambda event: self._send_command(
+            self.foot.TurnLeft(speed=self.foot_base_speed, time_run=self.foot_base_time)))
+        self.run_l_circle_bt.grid(
+            row=2, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.run_retreat_bt = tk.Button(self.frame_3, text='Retreat v', font=button_font, width=button_w)
+        self.run_retreat_bt = tk.Button(
+            self.frame_3, text='Retreat v', font=button_font, width=button_w)
         self.run_retreat_bt.bind('<Button-1>',
                                  lambda event: self._send_command(self.foot.FrontTranslation(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
-        self.run_retreat_bt.grid(row=2, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_retreat_bt.grid(
+            row=2, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.run_r_circle_bt = tk.Button(self.frame_3, text='R_Circle', font=button_font, width=button_w)
-        self.run_r_circle_bt.bind('<Button-1>', lambda event: self._send_command(self.foot.TurnLeft(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
-        self.run_r_circle_bt.grid(row=2, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.run_r_circle_bt = tk.Button(
+            self.frame_3, text='R_Circle', font=button_font, width=button_w)
+        self.run_r_circle_bt.bind('<Button-1>', lambda event: self._send_command(
+            self.foot.TurnLeft(speed=-1*self.foot_base_speed, time_run=self.foot_base_time)))
+        self.run_r_circle_bt.grid(
+            row=2, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.cam_mode_bt = tk.Button(self.frame_3, text=self.cam_mode[0], font=button_font, width=button_w)
+        self.cam_mode_bt = tk.Button(
+            self.frame_3, text=self.cam_mode[0], font=button_font, width=button_w)
         self.cam_mode_bt.bind('<Button-1>', self._cam_mode_button_func)
-        self.cam_mode_bt.grid(row=2, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.cam_mode_bt.grid(row=2, column=6, sticky=tk.NSEW,
+                              padx=button_padx, pady=button_pady)
 
         # *******************  BUTTON ROW 3 *************
-        self.sit_down_bt = tk.Button(self.frame_3, text='SitDown~', font=button_font, width=button_w)
+        self.sit_down_bt = tk.Button(
+            self.frame_3, text='SitDown~', font=button_font, width=button_w)
         self.sit_down_bt.bind(
             '<Button-1>',
             lambda event: self._send_command(self.motion_status.StandUp(delta_x=-1 * delta_move, time_t=2000)))
         self.sit_down_bt.bind(
             '<Button-3>',
             lambda event: self._send_command(self.motion_status.StandUp(delta_x=-1 * delta_mini_move, time_t=2000)))
-        self.sit_down_bt.grid(row=3, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.sit_down_bt.grid(row=3, column=0, sticky=tk.NSEW,
+                              padx=button_padx, pady=button_pady)
 
-        self.load_json_bt = tk.Button(self.frame_3, text='LoadJson', font=button_font, width=button_w)
+        self.load_json_bt = tk.Button(
+            self.frame_3, text='LoadJson', font=button_font, width=button_w)
         self.load_json_bt.bind('<Button-1>', self._buttun_none)
-        self.load_json_bt.grid(row=3, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.load_json_bt.grid(
+            row=3, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.save_json_bt = tk.Button(self.frame_3, text='SaveJson', font=button_font, width=button_w)
+        self.save_json_bt = tk.Button(
+            self.frame_3, text='SaveJson', font=button_font, width=button_w)
         self.save_json_bt.bind('<Button-1>', self._buttun_none)
-        self.save_json_bt.grid(row=3, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.save_json_bt.grid(
+            row=3, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.read_mode_bt = tk.Button(self.frame_3, text='ReadMode', font=button_font, width=button_w)
-        self.read_mode_bt.bind('<Button-1>', lambda event: self._send_command(base_script.steering_engine_mode))
-        self.read_mode_bt.grid(row=3, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.read_mode_bt = tk.Button(
+            self.frame_3, text='ReadMode', font=button_font, width=button_w)
+        self.read_mode_bt.bind(
+            '<Button-1>', lambda event: self._send_command(base_script.steering_engine_mode))
+        self.read_mode_bt.grid(
+            row=3, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.read_position_bt = tk.Button(self.frame_3, text='ReadPos', font=button_font, width=button_w)
-        self.read_position_bt.bind('<Button-1>', lambda event: self._send_command(base_script.steering_read_pos))
-        self.read_position_bt.grid(row=3, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.read_position_bt = tk.Button(
+            self.frame_3, text='ReadPos', font=button_font, width=button_w)
+        self.read_position_bt.bind(
+            '<Button-1>', lambda event: self._send_command(base_script.steering_read_pos))
+        self.read_position_bt.grid(
+            row=3, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.hand_grap_bt = tk.Button(self.frame_3, text='Hand+', font=button_font, width=button_w)
+        self.hand_grap_bt = tk.Button(
+            self.frame_3, text='Hand+', font=button_font, width=button_w)
         self.hand_grap_bt.bind('<Button-1>', self._test_button_func)
-        self.hand_grap_bt.grid(row=3, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.hand_grap_bt.grid(
+            row=3, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.hand_release_bt = tk.Button(self.frame_3, text='Hand-', font=button_font, width=button_w)
+        self.hand_release_bt = tk.Button(
+            self.frame_3, text='Hand-', font=button_font, width=button_w)
         self.hand_release_bt.bind('<Button-1>', self._buttun_none)
-        self.hand_release_bt.grid(row=3, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.hand_release_bt.grid(
+            row=3, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         # ******************** BUTTON ROW 4************
-        self.sit_down_bt = tk.Button(self.frame_3, text='CalibSnap', font=button_font, width=button_w)
+        self.sit_down_bt = tk.Button(
+            self.frame_3, text='CalibSnap', font=button_font, width=button_w)
         self.sit_down_bt.bind('<Button-1>', self._calib_capture)
-        self.sit_down_bt.grid(row=4, column=0, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.sit_down_bt.grid(row=4, column=0, sticky=tk.NSEW,
+                              padx=button_padx, pady=button_pady)
 
-        self.load_json_bt = tk.Button(self.frame_3, text='Calib', font=button_font, width=button_w)
+        self.load_json_bt = tk.Button(
+            self.frame_3, text='Calib', font=button_font, width=button_w)
         self.load_json_bt.bind('<Button-1>', self._cam_calib_compute)
-        self.load_json_bt.grid(row=4, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.load_json_bt.grid(
+            row=4, column=1, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.save_json_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.save_json_bt = tk.Button(
+            self.frame_3, text='NULL', font=button_font, width=button_w)
         self.save_json_bt.bind('<Button-1>', self._buttun_none)
-        self.save_json_bt.grid(row=4, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.save_json_bt.grid(
+            row=4, column=2, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.read_mode_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.read_mode_bt = tk.Button(
+            self.frame_3, text='NULL', font=button_font, width=button_w)
         self.read_mode_bt.bind('<Button-1>', self._buttun_none)
-        self.read_mode_bt.grid(row=4, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.read_mode_bt.grid(
+            row=4, column=3, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.read_position_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.read_position_bt = tk.Button(
+            self.frame_3, text='NULL', font=button_font, width=button_w)
         self.read_position_bt.bind('<Button-1>', self._buttun_none)
-        self.read_position_bt.grid(row=4, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.read_position_bt.grid(
+            row=4, column=4, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.hand_grap_bt = tk.Button(self.frame_3, text='NULL', font=button_font, width=button_w)
+        self.hand_grap_bt = tk.Button(
+            self.frame_3, text='NULL', font=button_font, width=button_w)
         self.hand_grap_bt.bind('<Button-1>', self._buttun_none)
-        self.hand_grap_bt.grid(row=4, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.hand_grap_bt.grid(
+            row=4, column=5, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
-        self.hand_release_bt = tk.Button(self.frame_3, text='robot_init', font=button_font, width=button_w)
+        self.hand_release_bt = tk.Button(
+            self.frame_3, text='robot_init', font=button_font, width=button_w)
         self.hand_release_bt.bind('<Button-1>', self._robot_init)
-        self.hand_release_bt.grid(row=4, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
+        self.hand_release_bt.grid(
+            row=4, column=6, sticky=tk.NSEW, padx=button_padx, pady=button_pady)
 
         # ******************* SERIAL ****************
         # var:
@@ -441,7 +557,8 @@ class TuningGUI:
         receiver_colspan = 5
         serial_lable_height = 2
         self.receiver = tk.Text(self.frame_5, width=60, height=20)
-        self.receiver.grid(row=0, column=0, rowspan=receiver_rowspan, columnspan=receiver_colspan)
+        self.receiver.grid(
+            row=0, column=0, rowspan=receiver_rowspan, columnspan=receiver_colspan)
         self.open_serial = tk.Button(self.frame_5,
                                      text=' OpenSerial ',
                                      font=button_font,
@@ -452,11 +569,16 @@ class TuningGUI:
                                       font=button_font,
                                       width=button_w,
                                       command=self._send_command)
-        self.stop_bit_label = tk.Label(self.frame_5, text='Stop Bit:', height=serial_lable_height)
-        self.check_bit_label = tk.Label(self.frame_5, text='check_bit:', height=serial_lable_height)
-        self.bit_wide_label = tk.Label(self.frame_5, text='bit_wide:', height=serial_lable_height)
-        self.serial_no_label = tk.Label(self.frame_5, text='serial_no:', height=serial_lable_height)
-        self.baud_rate_label = tk.Label(self.frame_5, text='bit_rate:', height=serial_lable_height)
+        self.stop_bit_label = tk.Label(
+            self.frame_5, text='Stop Bit:', height=serial_lable_height)
+        self.check_bit_label = tk.Label(
+            self.frame_5, text='check_bit:', height=serial_lable_height)
+        self.bit_wide_label = tk.Label(
+            self.frame_5, text='bit_wide:', height=serial_lable_height)
+        self.serial_no_label = tk.Label(
+            self.frame_5, text='serial_no:', height=serial_lable_height)
+        self.baud_rate_label = tk.Label(
+            self.frame_5, text='bit_rate:', height=serial_lable_height)
 
         port_list = list(serial.tools.list_ports.comports())
         serial_com = []
@@ -472,7 +594,8 @@ class TuningGUI:
                                    height=2,
                                    justify=tk.CENTER)
         self.combo0['values'] = ("1", "2")
-        self.combo0.bind("<<ComboboxSelected>>", lambda event: _combo_change_stop_bit(var=self.tk_var_stop_bit.get()))
+        self.combo0.bind("<<ComboboxSelected>>", lambda event: _combo_change_stop_bit(
+            var=self.tk_var_stop_bit.get()))
         self.combo0.current(0)
 
         self.tk_var_check_bit = tk.StringVar()
@@ -482,7 +605,8 @@ class TuningGUI:
                                    height=2,
                                    justify=tk.CENTER)
         self.combo1['values'] = ("NONE", "ODD", "EVEN", "MARK", "SPACE")
-        self.combo1.bind("<<ComboboxSelected>>", lambda event: _combo_change_check_bit(var=self.tk_var_check_bit.get()))
+        self.combo1.bind("<<ComboboxSelected>>", lambda event: _combo_change_check_bit(
+            var=self.tk_var_check_bit.get()))
         self.combo1.current(0)
 
         self.tk_var_bit_wide = tk.StringVar()
@@ -492,7 +616,8 @@ class TuningGUI:
                                    height=2,
                                    justify=tk.CENTER)
         self.combo2['values'] = ("5", "6", "7", "8")
-        self.combo2.bind("<<ComboboxSelected>>", lambda event: _combo_change_bit_wide(var=self.tk_var_bit_wide.get()))
+        self.combo2.bind("<<ComboboxSelected>>", lambda event: _combo_change_bit_wide(
+            var=self.tk_var_bit_wide.get()))
         self.combo2.current(3)
 
         self.tk_var_serial_no = tk.StringVar()
@@ -502,7 +627,8 @@ class TuningGUI:
                                    height=2,
                                    justify=tk.CENTER)
         self.combo3['values'] = serial_com
-        self.combo3.bind("<<ComboboxSelected>>", lambda event: _combo_change_serial_no(var=self.tk_var_serial_no.get()))
+        self.combo3.bind("<<ComboboxSelected>>", lambda event: _combo_change_serial_no(
+            var=self.tk_var_serial_no.get()))
         self.combo3.current(0)
 
         self.tk_var_baud_rate = tk.StringVar()
@@ -512,7 +638,8 @@ class TuningGUI:
                                    height=2,
                                    justify=tk.CENTER)
         self.combo4['values'] = ("9600", "19200", "38400", "115200")
-        self.combo4.bind("<<ComboboxSelected>>", lambda event: _combo_change_baud_rate(var=self.tk_var_baud_rate.get()))
+        self.combo4.bind("<<ComboboxSelected>>", lambda event: _combo_change_baud_rate(
+            var=self.tk_var_baud_rate.get()))
         self.combo4.current(3)
         self.open_serial.grid(row=0, column=receiver_colspan)
         self.send_command.grid(row=0, column=receiver_colspan + 1)
@@ -535,7 +662,7 @@ class TuningGUI:
         self.var_bit_wide = int(self.combo2.get())
         self.var_serial_no = self.combo3.get()
         if len(self.my_serial_prefer) > 0:
-            self.var_serial_no = self.my_serial_prefer 
+            self.var_serial_no = self.my_serial_prefer
         if self.var_check_bit == 'NONE':
             self.var_check_bit = serial.PARITY_NONE
 
@@ -603,30 +730,40 @@ class TuningGUI:
         return True
 
     def _create_thread(self):
-        #self._destory_thread()
+        # self._destory_thread()
         if self.cam_mode_flag == self.thread_single_flag:
-            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_single)
-            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(
+                target=self._thread_single)
+            self.cam_mode_thread_flag = [
+                False for _ in range(len(self.cam_mode_thread_flag))]
             self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
         if self.cam_mode_flag == self.thread_stereo_flag:
-            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_stereo)
-            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(
+                target=self._thread_stereo)
+            self.cam_mode_thread_flag = [
+                False for _ in range(len(self.cam_mode_thread_flag))]
             self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
         if self.cam_mode_flag == self.thread_1_track_flag:
-            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_1_track)
-            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(
+                target=self._thread_1_track)
+            self.cam_mode_thread_flag = [
+                False for _ in range(len(self.cam_mode_thread_flag))]
             self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
         if self.cam_mode_flag == self.thread_1_l_track_flag:
-            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_1_l_track)
-            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(
+                target=self._thread_1_l_track)
+            self.cam_mode_thread_flag = [
+                False for _ in range(len(self.cam_mode_thread_flag))]
             self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
         if self.cam_mode_flag == self.thread_3d_track_flag:
-            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(target=self._thread_3d_track)
-            self.cam_mode_thread_flag = [False for _ in range(len(self.cam_mode_thread_flag))]
+            self.cam_mode_thread[self.cam_mode_flag] = threading.Thread(
+                target=self._thread_3d_track)
+            self.cam_mode_thread_flag = [
+                False for _ in range(len(self.cam_mode_thread_flag))]
             self.cam_mode_thread_flag[self.cam_mode_flag] = True
             self.cam_mode_thread[self.cam_mode_flag].start()
 
@@ -639,7 +776,8 @@ class TuningGUI:
     def _calib_capture(self, x):
         # for camera calib
         if self.calib_step == 0:
-            self.receiver.insert('end', 'CALIB MODE, INPUT camera_id may calibed in SEND\nexample: 1, 2')
+            self.receiver.insert(
+                'end', 'CALIB MODE, INPUT camera_id may calibed in SEND\nexample: 1, 2')
             self.calib_step = 1
             return
         if self.calib_step == 1:
@@ -647,7 +785,8 @@ class TuningGUI:
             if len(camera_id) > 0:
                 camera_id = camera_id.split(',')
                 self.calib_camera_id = [int(dd) for dd in camera_id]
-                self.calib_camera_type = 'single' if len(camera_id) == 1 else 'stereo'
+                self.calib_camera_type = 'single' if len(
+                    camera_id) == 1 else 'stereo'
                 self.receiver.insert('end', '\nCALIB MODE, camera_id: ' + str(camera_id) + 'camera type:',
                                      self.calib_camera_type, '\nInput img_size:demo:1920,1080')
                 self.calib_step = 2
@@ -656,7 +795,8 @@ class TuningGUI:
             img_size = self.send_command_entry.get().split(',')
             img_size = [int(dd) for dd in img_size]
             self.calib_img_size = img_size
-            self.receiver.insert('end', '\ninput: calib_board_size: example: 7,7')
+            self.receiver.insert(
+                'end', '\ninput: calib_board_size: example: 7,7')
             self.calib_step = 3
             return
 
@@ -717,14 +857,17 @@ class TuningGUI:
         if self.calib_step == 7:
             if self.calib_cam_cap_thread == None:
                 if len(self.calib_camera_id) == 1:
-                    self.calib_cam_cap_thread = threading.Thread(target=self._thread_single_cam_calib)
+                    self.calib_cam_cap_thread = threading.Thread(
+                        target=self._thread_single_cam_calib)
                     self.calib_cam_cap_thread.start()
                     self.calib_snap_count = 0
                 if len(self.calib_camera_id) == 2:
-                    self.calib_cam_cap_thread = threading.Thread(target=self._thread_stereo_cam_calib)
+                    self.calib_cam_cap_thread = threading.Thread(
+                        target=self._thread_stereo_cam_calib)
                     self.calib_cam_cap_thread.start()
                     self.calib_snap_count = 0
-                self.receiver.insert('end', '\n-----------CREAT CALIB STREAM-------')
+                self.receiver.insert(
+                    'end', '\n-----------CREAT CALIB STREAM-------')
             else:
                 self.calib_step = 8
             return
@@ -732,10 +875,16 @@ class TuningGUI:
     def _thread_single_cam_calib(self):
         print('CALIB STREAM CREATE')
         single_cam = SingleCam(cam_id=self.calib_camera_id[0],
-                               cam_size=(self.calib_img_size[0], self.calib_img_size[1]),
+                               cam_size=(
+                                   self.calib_img_size[0], self.calib_img_size[1]),
                                cam_mode=self.calib_cam_open_mode)
         self.calib_imgs = [[]]
-        if single_cam.OpenCam():
+        open_cam_flag = None
+        try:
+            open_cam_flag = single_cam.OpenCam()
+        except:
+            return
+        if open_cam_flag:
             while self.calib_step == 7 or self.calib_step == 8:
                 snap = single_cam.SnapShoot()
                 if snap is None:
@@ -750,7 +899,8 @@ class TuningGUI:
                                      self.calib_cam_main_name + str(self.calib_snap_count).zfill(4) + '.jpg'), snap)
                     self.calib_imgs[0].append(snap.copy())
                     self.calib_snap_count = self.calib_snap_count + 1
-                    self.receiver.insert('end', '\nsnap a pic and snap total: ' + str(self.calib_snap_count))
+                    self.receiver.insert(
+                        'end', '\nsnap a pic and snap total: ' + str(self.calib_snap_count))
                     self.calib_step = 7
             single_cam.Close()
             print('DEBUG CAMERA SNAP OVER')
@@ -760,10 +910,19 @@ class TuningGUI:
         print('CALIB STREAM CREATE')
         stereo_cam = StereoCam(cam_id0=self.calib_camera_id[0],
                                cam_id1=self.calib_camera_id[1],
-                               cam_size=(self.calib_img_size[0], self.calib_img_size[1]),
-                               cam_mode=self.calib_cam_open_mode)
+                               cam_size=(
+                                   self.calib_img_size[0], self.calib_img_size[1]),
+                               cam_mode=self.calib_cam_open_mode,
+                               cam_fps=base_config.cam_fps,
+                               bright=base_config.bright,
+                               exposure=base_config.exposure)
         self.calib_imgs = [[], []]
-        if stereo_cam.OpenCam():
+        open_cam_flag = None
+        # try:
+        open_cam_flag = stereo_cam.OpenCam()
+        # except:
+        #    return
+        if open_cam_flag:
             while self.calib_step == 7 or self.calib_step == 8:
                 snap0, snap1 = stereo_cam.SnapShoot()
                 if snap0 is None or snap1 is None:
@@ -784,7 +943,8 @@ class TuningGUI:
                     corners0 = corners0 / ratio_x
                     corners1 = corners1 / ratio_x
                     snap0_cp = cv2.drawChessboardCorners(image=snap0_cp,
-                                                         patternSize=(self.calib_board_size[0],self.calib_board_size[1]),
+                                                         patternSize=(
+                                                             self.calib_board_size[0], self.calib_board_size[1]),
                                                          corners=corners0,
                                                          patternWasFound=ret0)
                     snap1_cp = cv2.drawChessboardCorners(image=snap1_cp,
@@ -809,7 +969,8 @@ class TuningGUI:
                     self.calib_imgs[0].append(snap0.copy())
                     self.calib_imgs[1].append(snap1.copy())
                     self.calib_snap_count = self.calib_snap_count + 1
-                    self.receiver.insert('end', '\nsnap a pic and snap total: ' + str(self.calib_snap_count))
+                    self.receiver.insert(
+                        'end', '\nsnap a pic and snap total: ' + str(self.calib_snap_count))
                     self.calib_step = 7
             stereo_cam.Close()
             print('DEBUG CAMERA SNAP OVER')
@@ -818,7 +979,8 @@ class TuningGUI:
     def _cam_calib_compute(self, x):
         self.calib_step = 0
         print('DEBUG Calib Process Start')
-        print('DEBUG Calib\n', 'len of imgs: ', len(self.calib_imgs), '\nboard size')
+        print('DEBUG Calib\n', 'len of imgs: ',
+              len(self.calib_imgs), '\nboard size')
         if len(self.calib_camera_id) == 1:
             print('DEBUG CalibSingle Process Start')
             calib_tool = LovelyCalibTool(imgs=self.calib_imgs,
@@ -856,10 +1018,19 @@ class TuningGUI:
 
     def _thread_single(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
-        sigle_cam = SingleCam(cam_id=self.cam_mode_single_cam_id)
-        if sigle_cam.OpenCam():
+        single_cam = SingleCam(cam_id=self.cam_mode_single_cam_id,
+                               cam_fps=base_config.cam_fps,
+                               bright=base_config.bright,
+                               exposure=base_config.exposure)
+        open_cam_flag = None
+        try:
+            open_cam_flag = single_cam.OpenCam(time_sleep=4)
+        except:
+            print('SUB THREAD CREATE OPEN CAM ERROR')
+            return
+        if open_cam_flag:
             while True and self.cam_mode_thread_flag[self.thread_single_flag]:
-                snap = sigle_cam.SnapShoot()
+                snap = single_cam.SnapShoot()
                 if snap is None:
                     break
                 snap = cv2.undistort(snap, self.camera_matrix, self.distortion)
@@ -873,7 +1044,7 @@ class TuningGUI:
                     self.monitor_tar.image = img_tk
                     self.np_tar = snap.copy()
                     self.cap_tar_snapped = True
-                    cv2.imwrite(r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\tar.jpg', self.np_tar)
+                    #cv2.imwrite(r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\tar.jpg', self.np_tar)
                 if not self.cap_curr_snap:
                     self.monitor_curr.configure(image=img_tk)
                     self.monitor_curr.image = img_tk
@@ -882,13 +1053,14 @@ class TuningGUI:
                     self.monitor_curr.image = img_tk
                     self.np_curr = snap.copy()
                     self.cap_curr_snapped = True
-                    dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr, 'cam_matrix': self.camera_matrix}
+                    dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr,
+                           'cam_matrix': self.camera_matrix}
                     fasci_config.SingleCamOnCall(**dic)
-                    cv2.imwrite(r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\cur.jpg', self.np_curr)
+                    #cv2.imwrite(r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\cur.jpg', self.np_curr)
                 self.monitor_show.configure(image=img_tk)
                 self.monitor_show.image = img_tk
                 # print('I am a happy thread : ', self.cam_mode[self.cam_mode_flag])
-        sigle_cam.Close()
+        single_cam.Close()
 
         return None
 
@@ -897,8 +1069,18 @@ class TuningGUI:
         stereo_cam = StereoCam(cam_id0=self.cam_mode_stereo_cam_id[0],
                                cam_id1=self.cam_mode_stereo_cam_id[1],
                                cam_size=self.cam_mode_stereo_cam_size,
-                               cam_mode=self.cam_open_mode)
-        if stereo_cam.OpenCam():
+                               cam_mode=self.cam_open_mode,
+                               cam_fps=base_config.cam_fps,
+                               bright=base_config.bright,
+                               exposure=base_config.exposure)
+        open_cam_flag = None
+        try:
+            # print('TRY OPEN CAM')
+            open_cam_flag = stereo_cam.OpenCam(time_sleep=4)
+        except:
+            # print('TRY OPEN CAM FAIL')
+            return
+        if open_cam_flag:
             while True and self.cam_mode_thread_flag[self.thread_stereo_flag]:
                 snap0, snap1 = stereo_cam.SnapShoot()
                 if snap0 is None or snap1 is None:
@@ -920,11 +1102,20 @@ class TuningGUI:
 
     def _thread_1_track(self):
         print('SUB THREAD CREATE : ', self.cam_mode[self.cam_mode_flag])
-        sigle_cam = SingleCam(cam_id=self.cam_mode_single_cam_id)
-        if sigle_cam.OpenCam():
+        single_cam = SingleCam(cam_id=self.cam_mode_single_cam_id,
+                               cam_fps=base_config.cam_fps,
+                               bright=base_config.bright,
+                               exposure=base_config.exposure)
+        open_cam_flag = None
+        try:
+            print('TRY OPEN CAM')
+            open_cam_flag = single_cam.OpenCam(time_sleep=4)
+        except:
+            return
+        if open_cam_flag:
             while True and self.cam_mode_thread_flag[self.thread_1_track_flag]:
 
-                snap = sigle_cam.SnapShoot()
+                snap = single_cam.SnapShoot()
                 if snap is None:
                     print('DEBUG snap is NULL')
                     break
@@ -944,13 +1135,15 @@ class TuningGUI:
                     self.monitor_curr.image = img_tk
                     self.np_curr = snap.copy()
                     self.cap_curr_snapped = True
-                    dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr, 'cam_matrix': self.camera_matrix}
+                    dic = {'np_img1': self.np_tar, 'np_img2': self.np_curr,
+                           'cam_matrix': self.camera_matrix}
                     dic = fasci_config.SingleCamOnCall(**dic)
-                    self._send_command(self.motion_status.ConditionReflex(**dic, time_t=1000))
+                    self._send_command(
+                        self.motion_status.ConditionReflex(**dic, time_t=1000))
                 self.monitor_show.configure(image=img_tk)
                 self.monitor_show.image = img_tk
-                #time.sleep(2)
-        sigle_cam.Close()
+                # time.sleep(2)
+        single_cam.Close()
 
         return
 
@@ -984,7 +1177,8 @@ class TuningGUI:
         tid = ctypes.c_long(tid)
         if not inspect.isclass(exctype):
             exctype = type(exctype)
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+            tid, ctypes.py_object(exctype))
         if res == 0:
             raise ValueError("invalid thread id")
         elif res != 1:
@@ -1018,7 +1212,8 @@ class TuningGUI:
         time.sleep(1)
         self._send_command(base_script.steering_read_pos)
         time.sleep(1)
-        self.motion_status.UpdateCurrPwmFromSerial(self.my_serial.receiver_buffer)
+        self.motion_status.UpdateCurrPwmFromSerial(
+            self.my_serial.receiver_buffer)
         self.my_serial.SetReceiverCallBack([self._receiver_callback])
 
     def Run(self):
