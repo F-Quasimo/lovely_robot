@@ -332,12 +332,13 @@ class YoloX:
         img, _ = self.preproc(img_in, None, self.img_size)
         img = torch.from_numpy(img).unsqueeze(0)
         img = img.float()
-        outputs = self.model(img)
-        outputs = postprocess(
-                outputs, self.num_classes, self.confthre,
-                self.nmsthre, class_agnostic=True
-            )
-        return outputs, img_info
+        with torch.no_grad():
+            outputs = self.model(img)
+            outputs = postprocess(
+                    outputs, self.num_classes, self.confthre,
+                    self.nmsthre, class_agnostic=True
+                )
+            return outputs, img_info
     
     def visual(self,output, img_info,cls_conf=None):
         ratio = img_info["ratio"]

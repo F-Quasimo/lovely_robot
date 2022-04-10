@@ -182,9 +182,13 @@ class StereoCam:
 
 
 if __name__ == '__main__':
-    '''
-    sigcam = SingleCam(cam_id=6, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW, cam_fps=30)
+    from nn_model.yolox.inference import YoloX
+    sigcam = SingleCam(cam_id=2, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW, cam_fps=30,
+                           bright=0,
+                           exposure=500)
     sigcam.OpenCam()
+    yolox=YoloX(pt_path='/home/fq/lovely_robot/tools/nn_model/yolox/checkpoints/yolox_nano_416416_torchscript.pt')
+    
     while True:
         if not sigcam.cap.isOpened():
             cv2.waitKey(3)
@@ -194,8 +198,11 @@ if __name__ == '__main__':
         if snap0 is None:
             print('NONE OF IMG')
             continue
-        snap0 = cv2.resize(snap0, (512, 288))
+        snap0 = cv2.resize(snap0, (416, 234))
+        output, img_info=yolox.inference(img_in=snap0.copy())
+        vis_ans=yolox.visual(output=output[0],img_info=img_info,cls_conf=0.7)
         cv2.imshow('snap0', snap0)
+        cv2.imshow('yolox_out', vis_ans)
         cv2.waitKey(1)
         #cv2.imwrite('/home/pi/github/save.jpg', snap0)
     '''
@@ -228,3 +235,4 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         # cv2.imwrite('/home/pi/github/save00.jpg', snap0)
         # cv2.imwrite('/home/pi/github/save01.jpg', snap1)
+    '''
