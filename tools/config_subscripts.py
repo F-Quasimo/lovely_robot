@@ -47,13 +47,14 @@ class BaseScript:
 exp_dir = os.path.dirname(__file__)
 
 class BaseConfig:
-    yolox_model_path='/home/fq/lovely_robot/tools/nn_model/yolox/checkpoints/yolox_nano_416416_torchscript.pt'
+    yolox_model_path='./nn_model/yolox/checkpoints/yolox_nano_416416_torchscript.pt'
     person_detect_param_path='./nn_model/simple_pose/checkpoints/person_detector.param'
     person_detect_bin_path='./nn_model/simple_pose/checkpoints/person_detector.bin'
     simple_pose2_param_path='./nn_model/simple_pose/checkpoints/pose.param'
     simple_pose2_bin_path='./nn_model/simple_pose/checkpoints/pose.bin'
     simple_pose_param_path='./nn_model/simple_pose/checkpoints/Ultralight-Nano-SimplePose.param'
     simple_pose_bin_path='./nn_model/simple_pose/checkpoints/Ultralight-Nano-SimplePose.bin'
+    yolox_model_path=os.path.join(exp_dir,yolox_model_path)
     person_detect_param_path=os.path.join(exp_dir,person_detect_param_path)
     person_detect_bin_path=os.path.join(exp_dir,person_detect_bin_path)
     simple_pose2_param_path=os.path.join(exp_dir,simple_pose2_param_path)

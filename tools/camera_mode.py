@@ -191,7 +191,7 @@ if __name__ == '__main__':
                        exposure=400)
     sigcam.OpenCam()
     yolox = YoloX(
-        pt_path='/home/fq/lovely_robot/tools/nn_model/yolox/checkpoints/yolox_nano_416416_torchscript.pt')
+        pt_path=base_config.yolox_model_path)
     from nn_model.simple_pose.simple_pose import PersonDetect
     person_detect = PersonDetect(param_path=base_config.person_detect_param_path,
                                  bin_path=base_config.person_detect_bin_path)

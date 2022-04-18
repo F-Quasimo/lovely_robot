@@ -2,10 +2,16 @@
 
 A Robot; YOLOX run on raspberry PI; object detection; object tracking; stereo matching and 3D reconstruction (camera calib is included); 
 
+## WHAT I AM DOING:
+- using gesture or joint pose to control the robot
+- flow to 3D scene or stereo 3D reconstruction
+- robot tracking
+C++ version may powerfull and faster than python version. but it is not on that way.
 
-| robot  | YOLOX running on raspberry PI  |
+
+| robot  | DeepLearning running on raspberry PI  |
 | ----  | ---- |
-| <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" title="my_robot" /> |  <img src="./pic_img/caixukun.gif" width = "484" height = "272" alt="caixukun" title="caixukun" /> |
+| <img src="./pic_img/my_robot.jpg" width = "200" height = "272" alt="my_robot" title="my_robot" /> |  <img src="./pic_img/human_pose.png" width = "484" height = "272" alt="human_pose" title="human_pose" /> |
 | <img src="./pic_img/system_design.png" width = "200" height = "272" alt="doc_design" title="doc_design" /> |  <img src="./pic_img/flow_stereo2.png" width = "484" height = "272" alt="flow_stereo_3d" title="flow_stereo_3d" />  |
 | **SGBM Stereo** | <img src="./pic_img/sgbm_stereo.gif" width = "484" height = "272" alt="sgbm_stereo_3d" title="sgbm_stereo_3d" /> |
 | **Master tracking  is Coming** | **Master tracking is Coming** |
@@ -54,3 +60,5 @@ calibration is part of the tuning tools. as you can see, on the left-bottom of t
 ### Reference
 https://github.com/zacjiang/GMA  
 https://github.com/Megvii-BaseDetection/YOLOX  
+https://github.com/Tencent/ncnn
+https://github.com/dog-qiuqiu/Ultralight-SimplePose
