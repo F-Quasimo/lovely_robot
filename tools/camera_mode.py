@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import cv2
 import numpy as np
 import platform
@@ -7,6 +8,7 @@ import threading
 import time
 from stereo_3d import Stereo3D
 from config_subscripts import base_config, base_script
+
 
 class SingleCam:
     def __init__(self, cam_id=0, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW, cam_fps=30, exposure=-6, bright=0):
@@ -182,27 +184,58 @@ class StereoCam:
 
 
 if __name__ == '__main__':
+    INFERENCE = 'Person'
     from nn_model.yolox.inference import YoloX
-    sigcam = SingleCam(cam_id=2, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW, cam_fps=30,
-                           bright=0,
-                           exposure=500)
+    sigcam = SingleCam(cam_id=0, cam_size=(1920, 1080), cam_mode=cv2.CAP_DSHOW, cam_fps=30,
+                       bright=20,
+                       exposure=400)
     sigcam.OpenCam()
-    yolox=YoloX(pt_path='/home/fq/lovely_robot/tools/nn_model/yolox/checkpoints/yolox_nano_416416_torchscript.pt')
-    
+    yolox = YoloX(
+        pt_path='/home/fq/lovely_robot/tools/nn_model/yolox/checkpoints/yolox_nano_416416_torchscript.pt')
+    from nn_model.simple_pose.simple_pose import PersonDetect
+    person_detect = PersonDetect(param_path=base_config.person_detect_param_path,
+                                 bin_path=base_config.person_detect_bin_path)
+    from nn_model.simple_pose.simple_pose import SimplePose, SimplePose2
+    simple_pose = SimplePose2(param_path=base_config.simple_pose2_param_path,
+                              bin_path=base_config.simple_pose2_bin_path)
+    # simple_pose = SimplePose(param_path='/home/fq/lovely_robot/tools/nn_model/simple_pose/checkpoints/Ultralight-Nano-SimplePose.param',
+    # bin_path='/home/fq/lovely_robot/tools/nn_model/simple_pose/checkpoints/Ultralight-Nano-SimplePose.bin')
     while True:
         if not sigcam.cap.isOpened():
             cv2.waitKey(3)
             print('wait...\n')
             continue
         snap0 = sigcam.SnapShoot()
+        snap0 = cv2.rotate(snap0, cv2.ROTATE_90_COUNTERCLOCKWISE)
         if snap0 is None:
             print('NONE OF IMG')
             continue
-        snap0 = cv2.resize(snap0, (416, 234))
-        output, img_info=yolox.inference(img_in=snap0.copy())
-        vis_ans=yolox.visual(output=output[0],img_info=img_info,cls_conf=0.7)
+        if INFERENCE == 'yolox':
+            time_before = time.time()
+            snap0 = cv2.resize(snap0, (416, 234))
+            output, img_info = yolox.inference(img_in=snap0.copy())
+            vis_ans = yolox.visual(
+                output=output[0], img_info=img_info, cls_conf=0.6)
+            time_end = time.time()
+            print('fps: ', 1/(time_end-time_before))
+            cv2.imshow('yolox_out', vis_ans)
+        elif INFERENCE == 'Person':
+            time_before = time.time()
+            snap0_320 = cv2.resize(snap0, (320, 320))
+            result = person_detect(snap0.copy())
+            time_end = time.time()
+            print('fps: ', 1/(time_end-time_before))
+            if result is not None:
+                cv2.imshow('ncnn0', result)
+                # if result.shape[0]/result.shape[1] > 256/192:
+                #     h=
+                result = cv2.resize(result, (192, 256))
+                # result=cv2.imread('/home/fq/github/Lite-HRNet/resources/cxk256192.png')
+                kps, result = simple_pose(result)
+                if result is not None:
+                    cv2.imshow('ncnn1', cv2.resize(result, (600, 800)))
         cv2.imshow('snap0', snap0)
-        cv2.imshow('yolox_out', vis_ans)
+
         cv2.waitKey(1)
         #cv2.imwrite('/home/pi/github/save.jpg', snap0)
     '''

@@ -315,6 +315,7 @@ def vis(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
 class YoloX:
     def __init__(self,num_classes=80,confthre=0.25,nmsthre=0.45,model_img_size=(416,416),pt_path='checkpoints/yolox_nano_416416_torchscript.pt' ):
         self.model=torch.jit.load(pt_path)
+        self.model.eval()
         self.preproc = ValTransform(legacy=False)
         self.num_classes=num_classes
         self.confthre=confthre

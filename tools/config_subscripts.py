@@ -44,13 +44,27 @@ class BaseScript:
 
     
 
-
+exp_dir = os.path.dirname(__file__)
 
 class BaseConfig:
+    yolox_model_path='/home/fq/lovely_robot/tools/nn_model/yolox/checkpoints/yolox_nano_416416_torchscript.pt'
+    person_detect_param_path='./nn_model/simple_pose/checkpoints/person_detector.param'
+    person_detect_bin_path='./nn_model/simple_pose/checkpoints/person_detector.bin'
+    simple_pose2_param_path='./nn_model/simple_pose/checkpoints/pose.param'
+    simple_pose2_bin_path='./nn_model/simple_pose/checkpoints/pose.bin'
+    simple_pose_param_path='./nn_model/simple_pose/checkpoints/Ultralight-Nano-SimplePose.param'
+    simple_pose_bin_path='./nn_model/simple_pose/checkpoints/Ultralight-Nano-SimplePose.bin'
+    person_detect_param_path=os.path.join(exp_dir,person_detect_param_path)
+    person_detect_bin_path=os.path.join(exp_dir,person_detect_bin_path)
+    simple_pose2_param_path=os.path.join(exp_dir,simple_pose2_param_path)
+    simple_pose2_bin_path=os.path.join(exp_dir,simple_pose2_bin_path)
+    simple_pose_param_path=os.path.join(exp_dir,simple_pose_param_path)
+    simple_pose_bin_path=os.path.join(exp_dir,simple_pose_bin_path)
+    
     calib_path = './fascinating_calib_stereo/calib_stereo.xml'
     server_ip = '192.168.50.246'
     cam_mode_single_cam_id =0
-    cam_mode_stereo_cam_id = (6, 4)
+    cam_mode_stereo_cam_id = (3, 2)
     cam_mode_stereo_cam_size = (1920, 1080)
     cam_open_mode = cv2.CAP_DSHOW
     cam_fps=30
@@ -67,10 +81,11 @@ class BaseConfig:
         exposure=500
     elif platform.machine()=='x86_64':
         serial_prefer=''
-        cam_mode_stereo_cam_id = (6, 4)
+        cam_mode_stereo_cam_id = (3, 2)
         cam_fps=30
         bright=0
         exposure=500
+    
 
 
 base_script = BaseScript()

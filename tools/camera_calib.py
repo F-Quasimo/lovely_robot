@@ -261,7 +261,7 @@ class CalibStereo:
             distCoeffs2=distCoeffs_1,
             imageSize=img_size,
             flags=cv2.CALIB_FIX_INTRINSIC,
-            criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 1, 1e-5))
+            criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 2, 1e-5))
 
         R0_matrix, R1_matrix, P0_matrix, P1_matrix, Q_matrix, validPixROI0, validPixROI1 = cv2.stereoRectify(
             cameraMatrix1=cameraMatrix0,
@@ -366,10 +366,12 @@ physics_size=(16.4375, 15.875),
 '''
 
 if __name__ == '__main__':
-    file_path = r'D:\ubuntu18_win\rootfs\home\fq\lovely_robot\tools\calib_stereo'
+    file_path = r'calib_wide_far'
     file_strs = os.listdir(file_path)
     img0_str = [d for d in file_strs if 'main' in d]
     img1_str = [d for d in file_strs if 'aux' in d]
+    img0_str.sort()
+    img1_str.sort()
     img0_str = [os.path.join(file_path, d) for d in img0_str]
     img1_str = [os.path.join(file_path, d) for d in img1_str]
     imgs = [[], []]
